@@ -1,0 +1,10 @@
+# Phụ thuộc của food101 trên Kaggle. KHÔNG liệt kê torch/torchvision/numpy: image Kaggle (Python 3.13) đã có,
+# cài lại có thể kéo bản khác và phá CUDA. Phiên bản: chỉ ghi cận dưới; ghi bản thật đã chạy vào ci_env.json (do run_kaggle_food101.sh sinh).
+timm>=1.0
+open_clip_torch>=2.24
+datasets>=2.19
+huggingface_hub>=0.23
+scikit-learn>=1.4
+scipy>=1.11
+pyyaml>=6.0
+pillow>=10.0

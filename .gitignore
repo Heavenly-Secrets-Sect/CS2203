@@ -1,0 +1,20 @@
+# Tài liệu của trường / ghi chú riêng, không công khai
+PhieudanhgiaMonhoc.pdf
+topic.md
+plan.md
+research/
+
+# Secret và dữ liệu cục bộ
+.env
+.env.*
+kaggle.json
+runs_inbox/
+*.ckpt
+*.pt
+*.pth
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.ipynb_checkpoints/

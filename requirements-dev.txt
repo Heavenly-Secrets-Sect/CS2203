@@ -1,0 +1,4 @@
+# Máy cá nhân (CPU): thêm torch/torchvision theo hướng dẫn của PyTorch cho máy bạn, rồi:
+-r requirements.txt
+pytest>=8.0
+numpy>=1.26

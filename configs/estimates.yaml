@@ -1,0 +1,40 @@
+# Ước tính thời gian cho scripts/plan.py. TẤT CẢ CÁC SỐ DƯỚI ĐÂY LÀ "CHƯA ĐO".
+# Nguồn: benchmark train AMP của timm trên RTX 3090 chia hệ số ~4 (research/03_models_infra.md mục 4.1).
+# Hệ số 4 là suy luận, không có số đo T4. Sau job `smoke` trên Kaggle, đọc job_times.csv và history.json
+# rồi sửa file này, chạy lại `python3 scripts/plan.py generate` (kế hoạch mới => config_hash mới => ghi DEVIATIONS.md).
+status: "chưa đo"
+
+protocol:
+  train_images: 68175      # 75,750 train trừ dev 10% (7,575)
+  dev_images: 7575
+  test_images: 25250
+  epochs: 5
+  batch_effective: 128
+  sweep_epochs: 2
+  sweep_train_frac: 0.2
+  sweep_lrs: [1.0e-5, 3.0e-5, 1.0e-4]
+
+# ảnh/giây khi train (fp16 AMP, 1 GPU T4, chưa đo)
+throughput_train_img_s:
+  vit_tiny: 500
+  vit_small: 250
+  vit_base: 90
+  vit_large: 28
+  convnext_base: 80
+  resnet50: 200          # 3090/4 ~ 206; plan.md ghi 250 là lạc quan
+  deit_base: 90
+  dinov2_base: 70        # suy ra: 256 token (patch14 ở 224) thay vì 196 => ~0.77x ViT-B
+  clip_base: 90
+
+eval_to_train_ratio: 3.0   # suy luận: tốc độ suy luận ~3x tốc độ train (3090: 4.0x). Chưa đo trên T4.
+job_overhead_min: 3.0      # nạp model + dựng DataLoader mỗi job (chưa đo)
+lp_head_min: 2.0           # huấn luyện đầu tuyến tính trên đặc trưng đã trích (chưa đo)
+smoke_steps: 20            # --max-steps của job smoke (thật: dữ liệu và model thật, KHÔNG phải cờ --smoke CPU của run_job)
+smoke_train_frac: 0.05
+smoke_extra_min: 2.0       # tải trọng số model lần đầu (chưa đo)
+session_overhead_min: 25   # pip + tải HF ~5 GB + dựng cache shard 101k ảnh, một lần mỗi session (chưa đo, đoán)
+
+# xếp session
+n_lanes: 2                 # 2 job 1-GPU chạy song song trên 2 x T4
+safety_factor: 1.15        # nhân vào ước tính khi xếp session (2 job chia 4 CPU, chưa đo)
+lane_cap_hours: 10.0       # = budget_hours trong kaggle-run.yml

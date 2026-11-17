@@ -1,0 +1,39 @@
+# Giao thuc cong bang (plan.md muc 4, docs/PLAN.md muc 4). Mac dinh = giao thuc chinh.
+dataset:
+  name: ethz/food101
+  revision: 83488de741c1bd1ce27aa6a2b33e19c7bdf92ca9   # tra cuu 2026-11-17 (03_models_infra.md)
+  expected_train: 75750
+  expected_test: 25250       # split HF 'validation'
+  expected_test_per_class: 250
+  num_classes: 101
+  short_side: 256            # cache: resize canh ngan 256, JPEG q95
+  jpeg_quality: 95
+split:
+  dev_frac: 0.1
+  seed: 1234
+  sweep_subset_seed: 1234    # tap con 20% (sweep) co dinh qua moi LR/model
+train:
+  epochs: 5
+  batch_size: 128            # batch hieu dung
+  weight_decay: 0.05
+  warmup_frac: 0.1
+  label_smoothing: 0.1
+  rrc_scale: [0.35, 1.0]
+  grad_clip: 1.0             # KHONG co trong plan.md; dat 0 de tat. Ghi vao run_config. (xem bao cao)
+  amp: true                  # fp16 + GradScaler tren CUDA
+  num_workers: null          # null -> FOOD101_NUM_WORKERS hoac min(4, cpu)
+test:
+  resize: 256
+  crop: 224
+lp:
+  weight_decay_grid: [0.0, 0.000001, 0.00001, 0.0001, 0.001]   # L2 trong ham muc tieu, chon theo dev acc
+  epochs: 40
+  batch_size: 1024
+  lr: 0.001
+sweep:
+  train_frac: 0.2
+  epochs: 2
+zeroshot:
+  prompt: "a photo of {}, a type of food."
+metrics:
+  ece_bins: 15

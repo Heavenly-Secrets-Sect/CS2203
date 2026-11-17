@@ -1,0 +1,107 @@
+# Danh muc model. Nguon: research/03_models_infra.md (tra cuu 2026-11-17).
+# lr: null cho toi khi sweep xong; dien gia tri vao day (hoac truyen --lr).
+# micro_batch: CHUA DO tren T4; gia tri ban dau la uoc luong, chinh sau ci-smoke (flag --micro-batch de ghi de).
+# revision_checked: sha repo HF (10 ky tu) tai thoi diem tra cuu; run_config ghi them sha luc chay neu lay duoc.
+vit_tiny:
+  timm_id: vit_tiny_patch16_224.augreg_in21k_ft_in1k
+  hf_id: timm/vit_tiny_patch16_224.augreg_in21k_ft_in1k
+  revision_checked: 7d3afdd0cf
+  mean: [0.5, 0.5, 0.5]
+  std: [0.5, 0.5, 0.5]
+  interpolation: bicubic
+  img_size: 224
+  micro_batch: 128
+  lr: null
+  notes: "ViT-Ti/16 augreg in21k->in1k"
+vit_small:
+  timm_id: vit_small_patch16_224.augreg_in21k_ft_in1k
+  hf_id: timm/vit_small_patch16_224.augreg_in21k_ft_in1k
+  revision_checked: 7e2c556302
+  mean: [0.5, 0.5, 0.5]
+  std: [0.5, 0.5, 0.5]
+  interpolation: bicubic
+  img_size: 224
+  micro_batch: 128
+  lr: null
+  notes: "ViT-S/16 augreg"
+vit_base:
+  timm_id: vit_base_patch16_224.augreg_in21k_ft_in1k
+  hf_id: timm/vit_base_patch16_224.augreg_in21k_ft_in1k
+  revision_checked: 2ec9fb3d7b
+  mean: [0.5, 0.5, 0.5]
+  std: [0.5, 0.5, 0.5]
+  interpolation: bicubic
+  img_size: 224
+  micro_batch: 64
+  lr: null
+  notes: "ViT-B/16 augreg"
+vit_large:
+  timm_id: vit_large_patch16_224.augreg_in21k_ft_in1k
+  hf_id: timm/vit_large_patch16_224.augreg_in21k_ft_in1k
+  revision_checked: 0930ab3308
+  mean: [0.5, 0.5, 0.5]
+  std: [0.5, 0.5, 0.5]
+  interpolation: bicubic
+  img_size: 224
+  micro_batch: 16
+  lr: null
+  notes: "ViT-L/16 augreg. fp16 co nguy co NaN o lr cao; micro-batch 16-32 la uoc luong (chua do)."
+convnext_base:
+  timm_id: convnext_base.fb_in22k_ft_in1k
+  hf_id: timm/convnext_base.fb_in22k_ft_in1k
+  revision_checked: 67758fcbcf
+  mean: [0.485, 0.456, 0.406]
+  std: [0.229, 0.224, 0.225]
+  interpolation: bicubic
+  img_size: 224
+  micro_batch: 64
+  lr: null
+  notes: "ConvNeXt-B in22k->in1k; train 224/test 288 goc, giao thuc dung 256->224"
+resnet50:
+  timm_id: resnet50.a1_in1k
+  hf_id: timm/resnet50.a1_in1k
+  revision_checked: 767268603c
+  mean: [0.485, 0.456, 0.406]
+  std: [0.229, 0.224, 0.225]
+  interpolation: bicubic
+  img_size: 224
+  micro_batch: 128
+  lr: null
+  notes: "ResNet-50 a1 recipe; BCE-pretrained, lr luoi co the o rim"
+deit_base:
+  timm_id: deit_base_patch16_224.fb_in1k
+  hf_id: timm/deit_base_patch16_224.fb_in1k
+  revision_checked: b78cc5532a
+  mean: [0.485, 0.456, 0.406]
+  std: [0.229, 0.224, 0.225]
+  interpolation: bicubic
+  img_size: 224
+  micro_batch: 64
+  lr: null
+  notes: "DeiT-B/16 in1k (mo ta, 1 seed)"
+dinov2_base:
+  timm_id: vit_base_patch14_dinov2.lvd142m
+  hf_id: timm/vit_base_patch14_dinov2.lvd142m
+  revision_checked: 4685c99dab
+  mean: [0.485, 0.456, 0.406]
+  std: [0.229, 0.224, 0.225]
+  interpolation: bicubic
+  img_size: 224
+  pass_img_size: true   # timm noi suy pos-embed ve 224 (16x16 token); res goc 518
+  micro_batch: 64
+  lr: null
+  notes: "DINOv2-B/14 chay o 224, khac res goc 518; GMACs cong bo khong so sanh duoc"
+clip_base:
+  timm_id: vit_base_patch16_clip_224.openai
+  hf_id: timm/vit_base_patch16_clip_224.openai
+  revision_checked: 977e3dd0ec
+  mean: [0.48145466, 0.4578275, 0.40821073]
+  std: [0.26862954, 0.26130258, 0.27577711]
+  interpolation: bicubic
+  img_size: 224
+  micro_batch: 64
+  lr: null
+  open_clip:            # chi cho regime zeroshot (text tower nam o open_clip, khong co o timm)
+    arch: ViT-B-16
+    pretrained: openai
+  notes: "CLIP ViT-B/16 openai. FT/LP dung image tower timm; zeroshot dung open_clip (import lazy)"
