@@ -5,7 +5,7 @@
 # Của project: STAGE (bắt buộc, KHÔNG có mặc định ngầm), FOOD101_PERSIST_ROOT (mặc định /kaggle/temp/food101-persist).
 # Chế độ thử không cần GPU: DRY=1 (chỉ in kế hoạch) | SMOKE_LOCAL=1 (bỏ GPU/pip/dựng cache dữ liệu) và FOOD101_RUN_CMD="python3 scripts/fake_run_job.py".
 # Quy ước: 2 job 1-GPU chạy song song (lane 0 -> GPU 0, lane 1 -> GPU 1); lane xong sớm thì "ăn" job cuối của lane kia (khoá mkdir).
-# Đóng gói zip SAU MỖI JOB. /kaggle/working chỉ có đúng một file: food101_s<session>.zip. Không checkpoint, không cache.
+# Đóng gói zip SAU MỖI JOB. /kaggle/working chỉ có đúng một file: food101_r<round>_s<session>.zip. Không checkpoint, không cache.
 # Thoát: 0 = xong hết; 1 = có job lỗi; 3 = không lỗi nhưng có job bị hoãn vì hết giờ; 2 = lỗi môi trường/cấu hình.
 set -uo pipefail
 
@@ -29,7 +29,8 @@ T0=$(date +%s)
 log() { printf '[%s] %s\n' "$(date -u +%H:%M:%S)" "$*"; }
 
 # ---------------------------------------------------------------- kế hoạch của session
-log "stage=$STAGE session=$SESSION budget=${BUDGET_H}h sha=${CI_SHA:-?} persist=$PERSIST"
+ROUND="$(python3 scripts/plan.py round --stage "$STAGE")" || { echo "không lấy được round của stage $STAGE" >&2; exit 2; }
+log "round=r$ROUND stage=$STAGE session=$SESSION budget=${BUDGET_H}h sha=${CI_SHA:-?} persist=$PERSIST"
 JOBS_TSV="$(python3 scripts/plan.py session-jobs --stage "$STAGE" --session "$SESSION")" || { echo "không lấy được job của session" >&2; exit 2; }
 [ -n "$JOBS_TSV" ] || { echo "session $SESSION của stage $STAGE rỗng" >&2; exit 2; }
 if [ "$DRY" = "1" ]; then
@@ -39,7 +40,7 @@ if [ "$LOCAL" != "1" ]; then python3 scripts/plan.py check || exit 2; fi
 
 mkdir -p "$PERSIST/outputs" "$PERSIST/logs" "$OUTDIR"
 rm -rf "$PERSIST/locks" "$PERSIST/pack.lock"; mkdir -p "$PERSIST/locks"
-rm -f "$OUTDIR"/.food101_s*.zip.tmp "$PERSIST/failed.txt" "$PERSIST/deferred.txt"
+rm -f "$OUTDIR"/.food101_r*_s*.zip.tmp "$PERSIST/failed.txt" "$PERSIST/deferred.txt"
 touch "$PERSIST/failed.txt" "$PERSIST/deferred.txt"
 [ -f "$PERSIST/job_times.csv" ] || echo "id,minutes,exit_code,est_min,lane,gpu" > "$PERSIST/job_times.csv"
 
@@ -102,7 +103,7 @@ log "$N job, $NGPU lane"
 
 pack() {  # có khoá để 2 lane không ghi đè nhau
   until mkdir "$PERSIST/pack.lock" 2>/dev/null; do sleep 1; done
-  bash scripts/pack_runs.sh "$SESSION" || log "CẢNH BÁO: pack lỗi"
+  bash scripts/pack_runs.sh "$ROUND" "$SESSION" || log "CẢNH BÁO: pack lỗi"
   rmdir "$PERSIST/pack.lock"
 }
 
@@ -144,7 +145,7 @@ for p in "${pids[@]}"; do wait "$p"; done
 
 # ---------------------------------------------------------------- tổng kết
 NFAIL=$(grep -c . "$PERSIST/failed.txt" || true); NDEF=$(grep -c . "$PERSIST/deferred.txt" || true)
-{ echo "stage=$STAGE session=$SESSION jobs=$N failed=$NFAIL deferred=$NDEF elapsed_min=$(( ($(date +%s) - T0) / 60 ))"
+{ echo "round=r$ROUND stage=$STAGE session=$SESSION jobs=$N failed=$NFAIL deferred=$NDEF elapsed_min=$(( ($(date +%s) - T0) / 60 ))"
   [ "$NFAIL" -eq 0 ] || { echo "FAILED:"; cat "$PERSIST/failed.txt"; }
   [ "$NDEF" -eq 0 ] || { echo "DEFERRED (hết giờ, cần plan lại):"; cat "$PERSIST/deferred.txt"; }
 } | tee "$PERSIST/logs/_summary.txt"

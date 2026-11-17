@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Chọn LR theo DEV acc từ kết quả stage sweep (PREREG: không dùng test). Ghi configs/selected_lr.json.
 
-  python3 scripts/pick_lr.py runs_inbox/.../food101_s1.zip [...] [--out configs/selected_lr.json]
+  python3 scripts/pick_lr.py runs_inbox/.../food101_r2_s1.zip [...] [--out configs/selected_lr.json]
 LR tốt nhất ở rìa lưới => in cảnh báo: PREREG yêu cầu mở thêm một bậc cho model đó và ghi DEVIATIONS.md (cần plan mới).
 Khoá dev acc trong metrics.json là giả định (DEV_KEYS); sửa nếu food101.run_job dùng tên khác.
 """

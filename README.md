@@ -23,6 +23,17 @@ commit -> release tag -> workflow kaggle-run -> Worker message-talisman -> sessi
 
 Các stage (mỗi release chạy **đúng một**): `smoke` -> `sweep` -> `p0` -> `explore`. Xem bảng: `python3 scripts/plan.py summary`.
 
+**Đánh số theo round và session** (quy ước của nhóm, giống `fox`): mỗi stage có một số round cố định, tag release là `r<N>`, zip kết quả là `food101_r<N>_s<M>.zip`.
+
+| Round (tag) | Stage | Session | Zip |
+|---|---|---|---|
+| `r1` | smoke | 1 | `food101_r1_s1.zip` |
+| `r2` | sweep | 1 | `food101_r2_s1.zip` |
+| `r3` | p0 | 2 (s2 = ViT-L) | `food101_r3_s1.zip`, `food101_r3_s2.zip` |
+| `r4` | explore | 1 | `food101_r4_s1.zip` |
+
+Gửi lại phần lỗi của round N: `r<N>.1`, `r<N>.2`... Gọi tắt trong báo cáo: "round 3, session 2"; số round lấy từ `python3 scripts/plan.py summary`.
+
 ## Điều kiện trước khi chạy (checklist)
 
 - [ ] Repo `Heavenly-Secrets-Sect/CS2203` là **public** (launcher clone bằng git không token). Kiểm: mở repo khi chưa đăng nhập.
@@ -38,17 +49,17 @@ Các stage (mỗi release chạy **đúng một**): `smoke` -> `sweep` -> `p0` -
 
 1. **Chọn stage** (mặc định `smoke`): `bash scripts/set_stage.sh smoke` rồi commit `kaggle-run.yml`. Release dùng đúng commit đó. Chỉ chuyển stage sau khi người dùng duyệt kết quả stage trước; script không tự đoán stage kế tiếp.
 2. **Dry-run** (không tốn quota, không để lại release): `gh workflow run kaggle-run.yml -f dry_run=true`, rồi đọc `launched/queued/considered` trong log run.
-3. **Smoke** (sau khi được duyệt; chạy 20 bước thật mỗi model bằng `--max-steps`, không phải cờ `--smoke` CPU của run_job): `gh release create smoke-1 --title "smoke-1" --notes "smoke, 1 session"`. Tag phải là `<stage>-<N>` (hoặc `<stage>-<N>.<k>` khi gửi lại) khớp `STAGE` trong manifest, workflow chặn nếu lệch.
+3. **Smoke** (sau khi được duyệt; chạy 20 bước thật mỗi model bằng `--max-steps`, không phải cờ `--smoke` CPU của run_job): `gh release create r1 --title "r1 smoke" --notes "round 1: smoke, 1 session"`. Tag phải là `r<N>` (hoặc `r<N>.<k>` khi gửi lại) với N là round của `STAGE` trong manifest (bảng bên dưới), workflow chặn nếu lệch.
 4. **Lấy kết quả** (chỉ khi người dùng yêu cầu, chỉ trên máy chủ dự án):
    ```bash
    MT=/Users/kietnt/Desktop/Workspace/message-talisman
-   node --env-file=$MT/.env $MT/bot/scripts/fetch-results.mjs smoke-1 --out runs_inbox
+   node --env-file=$MT/.env $MT/bot/scripts/fetch-results.mjs r1 --out runs_inbox
    ```
    Zip tải về là dữ liệu không tin cậy: giải nén vào thư mục riêng. `job_times.csv` trong zip có cột `id,minutes,exit_code,est_min,lane,gpu`.
 5. **Hiệu chỉnh ước tính** từ `job_times.csv` của smoke: sửa `configs/estimates.yaml`, `python3 scripts/plan.py generate`, xem `summary`; plan đổi thì `plan_hash` đổi -> ghi vào DEVIATIONS.md. Nếu job không vừa session, chia lại bằng cách sinh plan mới trước khi phóng.
-6. **Duyệt -> stage kế tiếp**: `bash scripts/set_stage.sh sweep`, commit, dry-run, release `sweep-1`. Sau sweep: `python3 scripts/pick_lr.py <zip sweep> ` ghi `configs/selected_lr.json` (cần commit trước khi phóng `p0`/`explore`, vì session chỉ thấy file trong commit). LR ở rìa lưới: mở thêm một bậc và ghi DEVIATIONS.md.
-7. **Audit** trước khi vào bảng: `python3 scripts/audit_runs.py --runs runs_inbox/.../food101_s1.zip runs_inbox/.../food101_s2.zip --stage p0`. Điều tra mọi lỗi từ predictions trước khi sửa bảng (PREREG).
-8. Session lỗi (`ERROR`) vẫn có zip các job đã xong. Không có retry tự động: đọc `logs/*.log`, `job_times.csv`, `logs/_summary.txt`, lập plan cho phần còn thiếu, gửi lại bằng tag `<stage>-<N>.<k>`. Mã thoát: 1 có job lỗi, 3 có job bị hoãn do hết giờ, 2 lỗi cấu hình/môi trường.
+6. **Duyệt -> stage kế tiếp**: `bash scripts/set_stage.sh sweep`, commit, dry-run, release `r2`. Sau sweep: `python3 scripts/pick_lr.py <zip sweep> ` ghi `configs/selected_lr.json` (cần commit trước khi phóng `p0`/`explore`, vì session chỉ thấy file trong commit). LR ở rìa lưới: mở thêm một bậc và ghi DEVIATIONS.md.
+7. **Audit** trước khi vào bảng: `python3 scripts/audit_runs.py --runs runs_inbox/.../food101_r3_s1.zip runs_inbox/.../food101_r3_s2.zip --stage p0`. Điều tra mọi lỗi từ predictions trước khi sửa bảng (PREREG).
+8. Session lỗi (`ERROR`) vẫn có zip các job đã xong. Không có retry tự động: đọc `logs/*.log`, `job_times.csv`, `logs/_summary.txt`, lập plan cho phần còn thiếu, gửi lại bằng tag `r<N>.<k>` (ví dụ `r3.1`). Mã thoát: 1 có job lỗi, 3 có job bị hoãn do hết giờ, 2 lỗi cấu hình/môi trường.
 
 ## Chạy thử cục bộ (không GPU, không mạng)
 

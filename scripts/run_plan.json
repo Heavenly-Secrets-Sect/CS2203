@@ -45,6 +45,7 @@
  },
  "stages": {
   "smoke": {
+   "round": 1,
    "description": "20 bước thật/mô hình (--max-steps, dữ liệu thật) + eval đủ dev/test: đo throughput, bộ nhớ, kiểm đường ống. Không dùng cho kết quả.",
    "depends_on": null,
    "requires_selected_lr": false,
@@ -255,6 +256,7 @@
    ]
   },
   "sweep": {
+   "round": 2,
    "description": "LR sweep proxy chung: 20% train, 2 epoch, {1e-5,3e-5,1e-4}, seed 42, chọn theo dev acc.",
    "depends_on": "smoke",
    "requires_selected_lr": false,
@@ -690,6 +692,7 @@
    ]
   },
   "p0": {
+   "round": 3,
    "description": "Bảng chính: Full FT Ti/S/B/L/ConvNeXt-B/R50 x3 seed; LP ViT-B/L x3; LP-FT ViT-B x3, ViT-L x1.",
    "depends_on": "sweep",
    "requires_selected_lr": true,
@@ -1158,6 +1161,7 @@
    ]
   },
   "explore": {
+   "round": 4,
    "description": "Thăm dò (1 seed, không kiểm định): DeiT/DINOv2/CLIP FT+LP, CLIP zero-shot.",
    "depends_on": "p0",
    "requires_selected_lr": true,
@@ -1293,5 +1297,5 @@
    ]
   }
  },
- "plan_hash": "e94069b970b9ee7b"
+ "plan_hash": "06b198dfc9bf8cf5"
 }

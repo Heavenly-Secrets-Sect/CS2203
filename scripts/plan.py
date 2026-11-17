@@ -4,7 +4,7 @@
 Lệnh:
   generate [--out FILE]        sinh run_plan.json (xác định; cần pyyaml để đọc configs/estimates.yaml)
   check [--regen] [--tag T]    kiểm run_plan.json và kaggle-run.yml (sessions, STAGE); --regen: sinh lại và so băm;
-                               --tag: tag release phải dạng <stage>-<N>[.<k>] khớp STAGE (dry-* để diễn tập)
+                               --tag: tag release phải dạng r<N>[.<k>] với N = round của STAGE (smoke=r1, sweep=r2, p0=r3, explore=r4; dry-* để diễn tập)
   set-stage STAGE              sửa kaggle-run.yml (sessions và STAGE=) cho đúng stage; KHÔNG tự đoán stage kế tiếp
   summary                      bảng stage / session / GPU-giờ
   session-jobs --stage S --session N   TSV cho run_kaggle_food101.sh
@@ -32,6 +32,8 @@ LR_PATH = ROOT / "configs" / "selected_lr.json"
 SEEDS = [42, 123, 2024]
 SWEEP_SEED = 42
 STAGE_ORDER = ["smoke", "sweep", "p0", "explore"]
+# Số round cố định theo stage (quy ước nhóm: tag release r<N>, zip <project>_r<N>_s<M>.zip)
+STAGE_ROUND = {s: i + 1 for i, s in enumerate(STAGE_ORDER)}
 LR_TAG = {1e-5: "1e-5", 3e-5: "3e-5", 1e-4: "1e-4"}
 
 FT_SCALE = ["vit_tiny", "vit_small", "vit_base", "vit_large"]
@@ -219,6 +221,7 @@ def build_stage(stage: str, est: dict) -> dict:
             })
     gpu_min = sum(j["est_min"] for j in jobs)
     return {
+        "round": STAGE_ROUND[stage],
         "description": STAGE_DESC[stage],
         "depends_on": STAGE_DEPENDS[stage],
         "requires_selected_lr": any(j["lr"] == "selected" for j in jobs),
@@ -308,8 +311,9 @@ def cmd_check(args) -> int:
     except (TypeError, ValueError):
         errs.append(f"budget_hours không đọc được: {man['budget_hours']!r}")
     tag = getattr(args, "tag", "") or ""
-    if tag and not tag.startswith("dry-") and not re.fullmatch(rf"{re.escape(str(st))}-\d+(\.\d+)?", tag):
-        errs.append(f"tag {tag!r} không khớp stage {st!r} của kaggle-run.yml (dạng {st}-<N> hoặc {st}-<N>.<k>; dry-* để diễn tập)")
+    rnd = STAGE_ROUND.get(st)
+    if tag and not tag.startswith("dry-") and not re.fullmatch(rf"r{rnd}(\.\d+)?", tag):
+        errs.append(f"tag {tag!r} không khớp round của stage {st!r} (round {rnd}): dùng r{rnd} hoặc r{rnd}.<k> khi gửi lại; dry-* để diễn tập)")
     cap = plan["estimates"]["lane_cap_hours"]
     try:
         if float(man["budget_hours"]) != float(cap):
@@ -353,12 +357,12 @@ def cmd_summary(args) -> int:
     plan = load_plan()
     tot = 0.0
     print(f"plan_hash {plan['plan_hash']}  (ước tính: {plan['estimates_status']})")
-    print(f"{'stage':8} {'job':>4} {'session':>7} {'GPU-giờ':>8}  wall/session (lane, đã nhân safety)")
+    print(f"{'round':5} {'stage':8} {'job':>4} {'session':>7} {'GPU-giờ':>8}  wall/session (lane, đã nhân safety)")
     for name in plan["stage_order"]:
         s = plan["stages"][name]
         tot += s["est_gpu_hours"]
         walls = ", ".join(f"s{x['session']}[{x['group']}] {max(x['est_lane_min_safe'])/60:.1f}h" for x in s["sessions"])
-        print(f"{name:8} {s['n_jobs']:>4} {s['n_sessions']:>7} {s['est_gpu_hours']:>8.2f}  {walls}")
+        print(f"r{s['round']:<4} {name:8} {s['n_jobs']:>4} {s['n_sessions']:>7} {s['est_gpu_hours']:>8.2f}  {walls}")
     print(f"TỔNG GPU-giờ (ước tính chưa đo, không gồm smoke {plan['stages']['smoke']['est_gpu_hours']:.2f}): "
           f"{tot - plan['stages']['smoke']['est_gpu_hours']:.2f}")
     return 0
@@ -406,6 +410,11 @@ def cmd_session_jobs(args) -> int:
     return 0
 
 
+def cmd_round(args) -> int:
+    print(STAGE_ROUND[args.stage])
+    return 0
+
+
 def cmd_stage_ids(args) -> int:
     for j in load_plan()["stages"][args.stage]["jobs"]:
         print(j["id"])
@@ -429,6 +438,7 @@ def main(argv=None) -> int:
     sub.add_parser("summary").set_defaults(fn=cmd_summary)
     sj = sub.add_parser("session-jobs"); sj.add_argument("--stage", required=True)
     sj.add_argument("--session", type=int, required=True); sj.set_defaults(fn=cmd_session_jobs)
+    rd = sub.add_parser("round"); rd.add_argument("--stage", required=True); rd.set_defaults(fn=cmd_round)
     si = sub.add_parser("stage-ids"); si.add_argument("--stage", required=True); si.set_defaults(fn=cmd_stage_ids)
     args = ap.parse_args(argv)
     return args.fn(args)

@@ -5,7 +5,7 @@ Kiểm, theo scripts/run_plan.json: (1) đủ job/seed, báo THIẾU và THỪA;
 25,250 dòng, nhãn và dự đoán trong 0..100, không trùng chỉ số; (4) logits hữu hạn, đúng hình (N,101); (5) metrics.json không NaN;
 (6) acc tính lại từ test_logits khớp metrics.json và khớp cột dự đoán; (7) cùng một thứ tự nhãn test ở mọi run.
 
-  python3 scripts/audit_runs.py --runs runs_inbox/food101-ci/p0/s1-v1/food101_s1.zip runs_inbox/.../food101_s2.zip --stage p0
+  python3 scripts/audit_runs.py --runs runs_inbox/food101-ci/p0/s1-v1/food101_r3_s1.zip runs_inbox/.../food101_r3_s2.zip --stage p0
   python3 scripts/audit_runs.py --runs DIR_CHUA_outputs --stage p0 explore
 
 Lược đồ khớp food101.run_job/evaluate.py (jsonl: id, gold, pred, top5_*; metrics: {"dev":{"top1"...},"test":{"top1"...}});

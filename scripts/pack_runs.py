@@ -26,12 +26,13 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--persist", required=True)
     ap.add_argument("--out-dir", required=True)
+    ap.add_argument("--round", type=int, required=True)
     ap.add_argument("--session", type=int, required=True)
     a = ap.parse_args(argv)
     persist, out_dir = Path(a.persist), Path(a.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    final = out_dir / f"food101_s{a.session}.zip"
-    tmp = out_dir / f".food101_s{a.session}.zip.tmp"
+    final = out_dir / f"food101_r{a.round}_s{a.session}.zip"
+    tmp = out_dir / f".food101_r{a.round}_s{a.session}.zip.tmp"
     n = 0
     with zipfile.ZipFile(tmp, "w") as z:
         for top in ("outputs", "logs"):
