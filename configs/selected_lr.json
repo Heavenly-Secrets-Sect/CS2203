@@ -1,0 +1,6 @@
+{
+ "clip_base": 3e-05,
+ "dinov2_base": 3e-05,
+ "vit_base": 0.0001,
+ "vit_large": 0.0001
+}

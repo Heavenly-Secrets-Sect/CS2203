@@ -4,7 +4,7 @@
 Lệnh:
   generate [--out FILE]        sinh run_plan.json (xác định; cần pyyaml để đọc configs/estimates.yaml)
   check [--regen] [--tag T]    kiểm run_plan.json và kaggle-run.yml (sessions, STAGE); --regen: sinh lại và so băm;
-                               --tag: tag release phải dạng r<N>[.<k>] với N = round của STAGE (smoke=r1, sweep=r2, p0=r3, explore=r4; dry-* để diễn tập)
+                               --tag: tag release phải dạng r<N>[.<k>] với N = round của STAGE (smoke=r1, sweep=r2, p0a=r3, explore=r4, sweep2=r5, sweep3=r6, p0b=r7; dry-* để diễn tập)
   set-stage STAGE              sửa kaggle-run.yml (sessions và STAGE=) cho đúng stage; KHÔNG tự đoán stage kế tiếp
   summary                      bảng stage / session / GPU-giờ
   session-jobs --stage S --session N   TSV cho run_kaggle_food101.sh
@@ -31,21 +31,31 @@ LR_PATH = ROOT / "configs" / "selected_lr.json"
 
 SEEDS = [42, 123, 2024]
 SWEEP_SEED = 42
-STAGE_ORDER = ["smoke", "sweep", "p0", "explore", "sweep2"]  # sweep2 = round 5: sweep mở rộng của round 2 (chạy TRƯỚC p0, xem DEVIATIONS D2)
+STAGE_ORDER = ["smoke", "sweep", "p0a", "explore", "sweep2", "sweep3", "p0b"]
+# Round: smoke=r1 sweep=r2 p0a=r3 explore=r4 sweep2=r5 sweep3=r6 p0b=r7. sweep2/sweep3 = sweep mở rộng của r2 (DEVIATIONS D2/D4);
+# p0 tách thành p0a (LR đã chốt: ViT-B/L) và p0b (chờ sweep3). DEVIATIONS D5.
 # Số round cố định theo stage (quy ước nhóm: tag release r<N>, zip <project>_r<N>_s<M>.zip)
 STAGE_ROUND = {s: i + 1 for i, s in enumerate(STAGE_ORDER)}
 SWEEP_BASE_LRS = {1e-5: "1e-5", 3e-5: "3e-5", 1e-4: "1e-4"}
-SWEEP_EXT_LRS = {3e-4: "3e-4", 1e-3: "1e-3"}
-LR_TAG = {**SWEEP_BASE_LRS, **SWEEP_EXT_LRS}
+SWEEP_EXT_LRS = {3e-4: "3e-4", 1e-3: "1e-3"}           # các LR của sweep2
+SWEEP3_EXT_LRS = {1e-3: "1e-3", 3e-3: "3e-3"}          # các LR của sweep3
+LR_TAG = {**SWEEP_BASE_LRS, **SWEEP_EXT_LRS, **SWEEP3_EXT_LRS}
 # LR mở thêm (PREREG: best ở rìa lưới -> mở thêm một bậc), chọn sau kết quả round 2: 7 model có best=1e-4.
 # ResNet-50 chỉ đạt 14% ở 1e-4 nên mở hai bậc ngay (tối đa 2 bậc). DINOv2/CLIP best ở trong lưới: không mở.
 SWEEP2_EXT = {"vit_tiny": [3e-4], "vit_small": [3e-4], "vit_base": [3e-4], "vit_large": [3e-4],
               "convnext_base": [3e-4], "resnet50": [3e-4, 1e-3], "deit_base": [3e-4]}
 
 
-def expected_lrs(model: str) -> list:
+# Sau sweep2: ViT-Ti/S, ConvNeXt-B, DeiT-B vẫn best=3e-4 (rìa), ResNet-50 best=1e-3 (rìa, còn tăng mạnh). Đây là lần mở rộng CUỐI:
+# sau sweep3 model nào vẫn ở rìa thì chấp nhận và ghi Threats to validity (DEVIATIONS D4), không mở thêm.
+SWEEP3_EXT = {"vit_tiny": [1e-3], "vit_small": [1e-3], "convnext_base": [1e-3], "deit_base": [1e-3], "resnet50": [3e-3]}
+READY_MODELS = ["vit_base", "vit_large", "dinov2_base", "clip_base"]   # LR đã chốt trong lưới sau sweep + sweep2
+
+
+def expected_lrs(model: str, upto: str = "sweep3") -> list:
     """Lưới LR mà model phải có đủ kết quả sweep trước khi chọn LR (gồm phần mở rộng)."""
-    return sorted(list(SWEEP_BASE_LRS) + SWEEP2_EXT.get(model, []))
+    ext = SWEEP2_EXT.get(model, []) + (SWEEP3_EXT.get(model, []) if upto == "sweep3" else [])
+    return sorted(list(SWEEP_BASE_LRS) + ext)
 
 FT_SCALE = ["vit_tiny", "vit_small", "vit_base", "vit_large"]
 FT_ARCH = ["convnext_base", "resnet50"]
@@ -55,11 +65,13 @@ ALL_MODELS = FT_SCALE + FT_ARCH + EXPLORE_MODELS
 STAGE_DESC = {
     "smoke": "20 bước thật/mô hình (--max-steps, dữ liệu thật) + eval đủ dev/test: đo throughput, bộ nhớ, kiểm đường ống. Không dùng cho kết quả.",
     "sweep": "LR sweep proxy chung: 20% train, 2 epoch, {1e-5,3e-5,1e-4}, seed 42, chọn theo dev acc.",
-    "p0": "Bảng chính: Full FT Ti/S/B/L/ConvNeXt-B/R50 x3 seed; LP ViT-B/L x3; LP-FT ViT-B x3, ViT-L x1.",
-    "explore": "Thăm dò (1 seed, không kiểm định): DeiT/DINOv2/CLIP FT+LP, CLIP zero-shot.",
+    "p0a": "Bảng chính, phần LR đã chốt: Full FT ViT-B/L x3 seed; LP ViT-B/L x3; LP-FT ViT-B x3, ViT-L x1.",
+    "p0b": "Bảng chính, phần chờ sweep3: Full FT ViT-Ti/S, ConvNeXt-B, ResNet-50 x3 seed; thêm DeiT-B FT (thăm dò, 1 seed).",
+    "explore": "Thăm dò (1 seed, không kiểm định): DINOv2/CLIP FT+LP, DeiT LP, CLIP zero-shot (quickgelu).",
+    "sweep3": "Sweep mở rộng lần cuối (D4): 1e-3 cho ViT-Ti/S, ConvNeXt-B, DeiT-B; 3e-3 cho ResNet-50; proxy giống sweep.",
     "sweep2": "Sweep mở rộng của round 2 (PREREG: LR tốt nhất ở rìa lưới): 3e-4 cho 7 model, thêm 1e-3 cho ResNet-50; proxy giống sweep (20% train, 2 epoch, seed 42).",
 }
-STAGE_DEPENDS = {"smoke": None, "sweep": "smoke", "p0": "sweep2", "explore": "p0", "sweep2": "sweep"}
+STAGE_DEPENDS = {"smoke": None, "sweep": "smoke", "p0a": "sweep2", "explore": "sweep2", "sweep2": "sweep", "sweep3": "sweep2", "p0b": "sweep3"}
 
 PROTOCOL = {  # đưa vào config_hash: đổi giao thức => đổi băm
     "epochs": 5, "batch_effective": 128, "optimizer": "AdamW", "weight_decay": 0.05,
@@ -111,19 +123,29 @@ def stage_jobs(stage: str) -> list[dict]:
             for m in ALL_MODELS:
                 if lr in SWEEP2_EXT.get(m, []):
                     jobs.append(_job(m, "sweep", SWEEP_SEED, lr=lr, epochs=2, train_frac=0.2, tag=tag))
-    elif stage == "p0":
+    elif stage == "sweep3":
+        for lr, tag in SWEEP3_EXT_LRS.items():
+            for m in ALL_MODELS:
+                if lr in SWEEP3_EXT.get(m, []):
+                    jobs.append(_job(m, "sweep", SWEEP_SEED, lr=lr, epochs=2, train_frac=0.2, tag=tag))
+    elif stage == "p0a":
         for s in SEEDS:
-            for m in FT_SCALE + FT_ARCH:
-                jobs.append(_job(m, "ft", s, lr="selected"))
             for m in ("vit_base", "vit_large"):
+                jobs.append(_job(m, "ft", s, lr="selected"))
                 jobs.append(_job(m, "lp", s))
             jobs.append(_job("vit_base", "lpft", s, lr="selected"))
             if s == 42:
                 jobs.append(_job("vit_large", "lpft", s, lr="selected"))
+    elif stage == "p0b":
+        for s in SEEDS:
+            for m in ("vit_tiny", "vit_small", "convnext_base", "resnet50"):
+                jobs.append(_job(m, "ft", s, lr="selected"))
+        jobs.append(_job("deit_base", "ft", 42, lr="selected"))
     elif stage == "explore":
-        for m in EXPLORE_MODELS:
+        for m in ("dinov2_base", "clip_base"):
             jobs.append(_job(m, "ft", 42, lr="selected"))
             jobs.append(_job(m, "lp", 42))
+        jobs.append(_job("deit_base", "lp", 42))
         jobs.append(_job("clip_base", "zeroshot", 42))
     else:
         raise ValueError(stage)
@@ -347,6 +369,15 @@ def cmd_check(args) -> int:
         for sess in s["sessions"]:
             if not any(sess["lanes"]):
                 errs.append(f"stage {sname} session {sess['session']} rỗng")
+    if st in plan["stages"] and plan["stages"][st]["requires_selected_lr"]:   # chặn từ GitHub, không đợi session Kaggle lỗi
+        if not LR_PATH.exists():
+            errs.append(f"stage {st} cần configs/selected_lr.json (chạy scripts/pick_lr.py sau sweep rồi commit)")
+        else:
+            sel = json.loads(LR_PATH.read_text(encoding="utf-8"))
+            need = sorted({j["model"] for j in plan["stages"][st]["jobs"] if j["lr"] == "selected"})
+            miss = [m for m in need if m not in sel]
+            if miss:
+                errs.append(f"stage {st}: configs/selected_lr.json thiếu LR của {miss}")
     for e in errs:
         print("LỖI:", e, file=sys.stderr)
     if not errs:

@@ -21,7 +21,7 @@ commit -> release tag -> workflow kaggle-run -> Worker message-talisman -> sessi
 | `scripts/stats.py` | khung scorer / Welch / Holm / paired bootstrap (chưa dùng cho kết quả) |
 | `configs/estimates.yaml` | throughput và hằng số ước tính, **tất cả chưa đo** |
 
-Các stage (mỗi release chạy **đúng một**): `smoke` -> `sweep` -> `sweep2` (mở rộng LR, xem DEVIATIONS D2) -> `p0` -> `explore`. Xem bảng: `python3 scripts/plan.py summary`.
+Các stage (mỗi release chạy **đúng một**): `smoke` -> `sweep` -> `sweep2` -> `sweep3` (mở rộng LR, DEVIATIONS D2/D4) và `p0a`, `explore` (chạy song song, không chờ sweep3), rồi `p0b` sau sweep3 (DEVIATIONS D5). Xem bảng: `python3 scripts/plan.py summary`.
 
 **Đánh số theo round và session** (quy ước của nhóm, giống `fox`): mỗi stage có một số round cố định, tag release là `r<N>`, zip kết quả là `food101_r<N>_s<M>.zip`.
 
@@ -29,9 +29,11 @@ Các stage (mỗi release chạy **đúng một**): `smoke` -> `sweep` -> `sweep
 |---|---|---|---|
 | `r1` | smoke | 1 | `food101_r1_s1.zip` |
 | `r2` | sweep | 1 | `food101_r2_s1.zip` |
-| `r3` | p0 | 2 (s2 = ViT-L) | `food101_r3_s1.zip`, `food101_r3_s2.zip` |
-| `r4` | explore | 1 | `food101_r4_s1.zip` |
-| `r5` | sweep2 (sweep mở rộng của r2, chạy trước r3) | 1 | `food101_r5_s1.zip` |
+| `r3` | p0a (ViT-B/L: FT, LP, LP-FT) | 2 (s2 = ViT-L) | `food101_r3_s1.zip`, `food101_r3_s2.zip` |
+| `r4` | explore (DINOv2/CLIP FT+LP, DeiT LP, CLIP zero-shot) | 1 | `food101_r4_s1.zip` |
+| `r5` | sweep2 (sweep mở rộng của r2) | 1 | `food101_r5_s1.zip` |
+| `r6` | sweep3 (mở rộng lần cuối) | 1 | `food101_r6_s1.zip` |
+| `r7` | p0b (ViT-Ti/S, ConvNeXt-B, ResNet-50 FT; DeiT-B FT) | 1 | `food101_r7_s1.zip` |
 
 Gửi lại phần lỗi của round N: `r<N>.1`, `r<N>.2`... Gọi tắt trong báo cáo: "round 3, session 2"; số round lấy từ `python3 scripts/plan.py summary`.
 

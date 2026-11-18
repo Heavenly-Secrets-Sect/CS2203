@@ -44,11 +44,12 @@ class PlanTests(unittest.TestCase):
             self.assertEqual(len(ids), len(set(ids)))
             self.assertEqual(s["n_sessions"], len(s["sessions"]))
         self.assertEqual(len(p["stages"]["sweep"]["jobs"]), 27)
-        self.assertEqual(len(p["stages"]["p0"]["jobs"]), 28)
-        self.assertEqual(len(p["stages"]["explore"]["jobs"]), 7)
-        l = [j for j in p["stages"]["p0"]["jobs"] if j["model"] == "vit_large" and j["regime"] != "lp"]
+        self.assertEqual(len(p["stages"]["p0a"]["jobs"]), 16)
+        self.assertEqual(len(p["stages"]["p0b"]["jobs"]), 13)
+        self.assertEqual(len(p["stages"]["explore"]["jobs"]), 6)
+        l = [j for j in p["stages"]["p0a"]["jobs"] if j["model"] == "vit_large" and j["regime"] != "lp"]
         self.assertEqual(sorted((j["regime"], j["seed"]) for j in l), [("ft", 42), ("ft", 123), ("ft", 2024), ("lpft", 42)])
-        for sess in p["stages"]["p0"]["sessions"]:
+        for sess in p["stages"]["p0a"]["sessions"]:
             models = {i.split("__")[0] for lane in sess["lanes"] for i in lane}
             self.assertEqual("vit_large" in models, sess["group"] == "vit_large")
             if sess["group"] == "vit_large":
