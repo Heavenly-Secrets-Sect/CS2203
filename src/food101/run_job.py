@@ -252,7 +252,7 @@ def zeroshot(mcfg, cfg, class_names, dev_loader, test_loader, device, smoke, img
         with torch.no_grad():
             T = F.normalize(m.encode_text(tok(prompts).to(device)).float(), dim=-1).cpu()
         enc_img = m.encode_image
-        scale = float(m.logit_scale.exp())
+        scale = float(m.logit_scale.detach().exp())
         info = {"zeroshot_impl": "open_clip", "open_clip": oc, "prompt": cfg["zeroshot"]["prompt"],
                 "logit_scale": scale}
 

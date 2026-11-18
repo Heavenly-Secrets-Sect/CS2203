@@ -2,7 +2,7 @@
  "schema": 1,
  "project": "food101-vit",
  "note": "ĐÓNG BĂNG. Sinh bởi scripts/plan.py từ configs/estimates.yaml. Ước tính thời gian: chưa đo.",
- "estimates_status": "chưa đo",
+ "estimates_status": "đo từ smoke r1 (20 bước/model, gồm warm-up, 2 job song song trên 2 T4); còn lại chưa đo",
  "seeds": [
   42,
   123,
@@ -26,17 +26,17 @@
  ],
  "estimates": {
   "throughput_train_img_s": {
-   "vit_tiny": 500,
-   "vit_small": 250,
-   "vit_base": 90,
-   "vit_large": 28,
-   "convnext_base": 80,
-   "resnet50": 200,
-   "deit_base": 90,
-   "dinov2_base": 70,
-   "clip_base": 90
+   "vit_tiny": 172,
+   "vit_small": 190,
+   "vit_base": 102,
+   "vit_large": 40,
+   "convnext_base": 78,
+   "resnet50": 194,
+   "deit_base": 126,
+   "dinov2_base": 86,
+   "clip_base": 107
   },
-  "eval_to_train_ratio": 3.0,
+  "eval_to_train_ratio": 2.7,
   "job_overhead_min": 3.0,
   "safety_factor": 1.15,
   "lane_cap_hours": 10.0,
@@ -51,7 +51,7 @@
    "requires_selected_lr": false,
    "n_jobs": 12,
    "n_sessions": 1,
-   "est_gpu_hours": 1.52,
+   "est_gpu_hours": 1.49,
    "sessions": [
     {
      "session": 1,
@@ -59,28 +59,28 @@
      "lanes": [
       [
        "vit_tiny__ft__s42__smoke",
+       "vit_small__ft__s42__smoke",
        "vit_large__ft__s42__smoke",
-       "resnet50__ft__s42__smoke",
-       "deit_base__ft__s42__smoke",
-       "vit_base__lp__s42__smoke",
-       "vit_base__lpft__s42__smoke"
+       "clip_base__ft__s42__smoke",
+       "vit_base__lpft__s42__smoke",
+       "clip_base__zeroshot__s42__smoke"
       ],
       [
-       "vit_small__ft__s42__smoke",
        "vit_base__ft__s42__smoke",
        "convnext_base__ft__s42__smoke",
+       "resnet50__ft__s42__smoke",
+       "deit_base__ft__s42__smoke",
        "dinov2_base__ft__s42__smoke",
-       "clip_base__ft__s42__smoke",
-       "clip_base__zeroshot__s42__smoke"
+       "vit_base__lp__s42__smoke"
       ]
      ],
      "est_lane_min": [
-      47.0,
-      43.9
+      45.6,
+      43.8
      ],
      "est_lane_min_safe": [
-      54.0,
-      50.4
+      52.4,
+      50.3
      ]
     }
    ],
@@ -96,7 +96,7 @@
      "max_steps": 20,
      "smoke": true,
      "out_rel": "smoke/vit_tiny_ft/seed_42",
-     "est_min": 5.5,
+     "est_min": 6.4,
      "config_hash": "7ee6ad143054"
     },
     {
@@ -110,7 +110,7 @@
      "max_steps": 20,
      "smoke": true,
      "out_rel": "smoke/vit_small_ft/seed_42",
-     "est_min": 5.9,
+     "est_min": 6.3,
      "config_hash": "d09951f29170"
     },
     {
@@ -124,7 +124,7 @@
      "max_steps": 20,
      "smoke": true,
      "out_rel": "smoke/vit_base_ft/seed_42",
-     "est_min": 7.5,
+     "est_min": 7.4,
      "config_hash": "5c3449f4a46d"
     },
     {
@@ -138,7 +138,7 @@
      "max_steps": 20,
      "smoke": true,
      "out_rel": "smoke/vit_large_ft/seed_42",
-     "est_min": 13.0,
+     "est_min": 11.1,
      "config_hash": "e3ae967e27ca"
     },
     {
@@ -152,7 +152,7 @@
      "max_steps": 20,
      "smoke": true,
      "out_rel": "smoke/convnext_base_ft/seed_42",
-     "est_min": 7.8,
+     "est_min": 8.1,
      "config_hash": "657fdfd72092"
     },
     {
@@ -166,7 +166,7 @@
      "max_steps": 20,
      "smoke": true,
      "out_rel": "smoke/resnet50_ft/seed_42",
-     "est_min": 6.1,
+     "est_min": 6.3,
      "config_hash": "185513dfba60"
     },
     {
@@ -180,7 +180,7 @@
      "max_steps": 20,
      "smoke": true,
      "out_rel": "smoke/deit_base_ft/seed_42",
-     "est_min": 7.5,
+     "est_min": 6.9,
      "config_hash": "9542b0d36ec5"
     },
     {
@@ -194,7 +194,7 @@
      "max_steps": 20,
      "smoke": true,
      "out_rel": "smoke/dinov2_base_ft/seed_42",
-     "est_min": 8.2,
+     "est_min": 7.9,
      "config_hash": "b6c16f166ed5"
     },
     {
@@ -208,7 +208,7 @@
      "max_steps": 20,
      "smoke": true,
      "out_rel": "smoke/clip_base_ft/seed_42",
-     "est_min": 7.5,
+     "est_min": 7.3,
      "config_hash": "16cbf50adbef"
     },
     {
@@ -236,7 +236,7 @@
      "max_steps": 20,
      "smoke": true,
      "out_rel": "smoke/vit_base_lpft/seed_42",
-     "est_min": 7.7,
+     "est_min": 7.6,
      "config_hash": "84a85c5bcac3"
     },
     {
@@ -250,7 +250,7 @@
      "max_steps": 20,
      "smoke": true,
      "out_rel": "smoke/clip_base_zeroshot/seed_42",
-     "est_min": 7.0,
+     "est_min": 6.9,
      "config_hash": "9fb9038e259f"
     }
    ]
@@ -262,51 +262,51 @@
    "requires_selected_lr": false,
    "n_jobs": 27,
    "n_sessions": 1,
-   "est_gpu_hours": 4.23,
+   "est_gpu_hours": 3.89,
    "sessions": [
     {
      "session": 1,
      "group": "main",
      "lanes": [
       [
-       "vit_small__sweep__s42__lr1e-5",
-       "convnext_base__sweep__s42__lr1e-5",
-       "deit_base__sweep__s42__lr1e-5",
-       "vit_tiny__sweep__s42__lr3e-5",
-       "vit_base__sweep__s42__lr3e-5",
-       "vit_large__sweep__s42__lr3e-5",
-       "resnet50__sweep__s42__lr3e-5",
-       "clip_base__sweep__s42__lr3e-5",
-       "vit_tiny__sweep__s42__lr1e-4",
-       "vit_base__sweep__s42__lr1e-4",
-       "vit_large__sweep__s42__lr1e-4",
-       "convnext_base__sweep__s42__lr1e-4",
-       "clip_base__sweep__s42__lr1e-4"
-      ],
-      [
        "vit_tiny__sweep__s42__lr1e-5",
-       "vit_base__sweep__s42__lr1e-5",
-       "vit_large__sweep__s42__lr1e-5",
        "resnet50__sweep__s42__lr1e-5",
        "dinov2_base__sweep__s42__lr1e-5",
        "clip_base__sweep__s42__lr1e-5",
        "vit_small__sweep__s42__lr3e-5",
+       "vit_base__sweep__s42__lr3e-5",
+       "vit_large__sweep__s42__lr3e-5",
        "convnext_base__sweep__s42__lr3e-5",
        "deit_base__sweep__s42__lr3e-5",
-       "dinov2_base__sweep__s42__lr3e-5",
        "vit_small__sweep__s42__lr1e-4",
+       "vit_base__sweep__s42__lr1e-4",
+       "vit_large__sweep__s42__lr1e-4",
+       "deit_base__sweep__s42__lr1e-4"
+      ],
+      [
+       "vit_small__sweep__s42__lr1e-5",
+       "vit_base__sweep__s42__lr1e-5",
+       "vit_large__sweep__s42__lr1e-5",
+       "convnext_base__sweep__s42__lr1e-5",
+       "deit_base__sweep__s42__lr1e-5",
+       "vit_tiny__sweep__s42__lr3e-5",
+       "resnet50__sweep__s42__lr3e-5",
+       "dinov2_base__sweep__s42__lr3e-5",
+       "clip_base__sweep__s42__lr3e-5",
+       "vit_tiny__sweep__s42__lr1e-4",
+       "convnext_base__sweep__s42__lr1e-4",
        "resnet50__sweep__s42__lr1e-4",
-       "deit_base__sweep__s42__lr1e-4",
-       "dinov2_base__sweep__s42__lr1e-4"
+       "dinov2_base__sweep__s42__lr1e-4",
+       "clip_base__sweep__s42__lr1e-4"
       ]
      ],
      "est_lane_min": [
-      127.9,
-      125.9
+      116.1,
+      117.3
      ],
      "est_lane_min_safe": [
-      146.9,
-      144.7
+      133.6,
+      134.9
      ]
     }
    ],
@@ -322,7 +322,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "vit_tiny_sweep-lr1e-5/seed_42",
-     "est_min": 4.1,
+     "est_min": 6.2,
      "config_hash": "00f47130f970"
     },
     {
@@ -336,7 +336,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "vit_small_sweep-lr1e-5/seed_42",
-     "est_min": 5.2,
+     "est_min": 5.9,
      "config_hash": "ce466dac68a3"
     },
     {
@@ -350,7 +350,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "vit_base_sweep-lr1e-5/seed_42",
-     "est_min": 9.0,
+     "est_min": 8.4,
      "config_hash": "98c5cb608a32"
     },
     {
@@ -364,7 +364,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "vit_large_sweep-lr1e-5/seed_42",
-     "est_min": 22.2,
+     "est_min": 16.7,
      "config_hash": "10f68713d3bb"
     },
     {
@@ -378,7 +378,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "convnext_base_sweep-lr1e-5/seed_42",
-     "est_min": 9.7,
+     "est_min": 10.0,
      "config_hash": "dc15a77a7c4d"
     },
     {
@@ -392,7 +392,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "resnet50_sweep-lr1e-5/seed_42",
-     "est_min": 5.7,
+     "est_min": 5.8,
      "config_hash": "5fe2e584c16c"
     },
     {
@@ -406,7 +406,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "deit_base_sweep-lr1e-5/seed_42",
-     "est_min": 9.0,
+     "est_min": 7.3,
      "config_hash": "5380e580bc43"
     },
     {
@@ -420,7 +420,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "dinov2_base_sweep-lr1e-5/seed_42",
-     "est_min": 10.7,
+     "est_min": 9.4,
      "config_hash": "14188ae93d07"
     },
     {
@@ -434,7 +434,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "clip_base_sweep-lr1e-5/seed_42",
-     "est_min": 9.0,
+     "est_min": 8.1,
      "config_hash": "dbacb5e5ecd4"
     },
     {
@@ -448,7 +448,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "vit_tiny_sweep-lr3e-5/seed_42",
-     "est_min": 4.1,
+     "est_min": 6.2,
      "config_hash": "5c533ba7227a"
     },
     {
@@ -462,7 +462,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "vit_small_sweep-lr3e-5/seed_42",
-     "est_min": 5.2,
+     "est_min": 5.9,
      "config_hash": "599a7437af03"
     },
     {
@@ -476,7 +476,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "vit_base_sweep-lr3e-5/seed_42",
-     "est_min": 9.0,
+     "est_min": 8.4,
      "config_hash": "bf838bceda2b"
     },
     {
@@ -490,7 +490,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "vit_large_sweep-lr3e-5/seed_42",
-     "est_min": 22.2,
+     "est_min": 16.7,
      "config_hash": "7a16034b3de6"
     },
     {
@@ -504,7 +504,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "convnext_base_sweep-lr3e-5/seed_42",
-     "est_min": 9.7,
+     "est_min": 10.0,
      "config_hash": "af20b0273bba"
     },
     {
@@ -518,7 +518,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "resnet50_sweep-lr3e-5/seed_42",
-     "est_min": 5.7,
+     "est_min": 5.8,
      "config_hash": "d657bbfc8819"
     },
     {
@@ -532,7 +532,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "deit_base_sweep-lr3e-5/seed_42",
-     "est_min": 9.0,
+     "est_min": 7.3,
      "config_hash": "9f068b2fb36e"
     },
     {
@@ -546,7 +546,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "dinov2_base_sweep-lr3e-5/seed_42",
-     "est_min": 10.7,
+     "est_min": 9.4,
      "config_hash": "7d29e1bb6d39"
     },
     {
@@ -560,7 +560,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "clip_base_sweep-lr3e-5/seed_42",
-     "est_min": 9.0,
+     "est_min": 8.1,
      "config_hash": "906c945e49f4"
     },
     {
@@ -574,7 +574,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "vit_tiny_sweep-lr1e-4/seed_42",
-     "est_min": 4.1,
+     "est_min": 6.2,
      "config_hash": "9559ff7d0c31"
     },
     {
@@ -588,7 +588,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "vit_small_sweep-lr1e-4/seed_42",
-     "est_min": 5.2,
+     "est_min": 5.9,
      "config_hash": "b0d1c302e429"
     },
     {
@@ -602,7 +602,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "vit_base_sweep-lr1e-4/seed_42",
-     "est_min": 9.0,
+     "est_min": 8.4,
      "config_hash": "229b5d8a2b84"
     },
     {
@@ -616,7 +616,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "vit_large_sweep-lr1e-4/seed_42",
-     "est_min": 22.2,
+     "est_min": 16.7,
      "config_hash": "ca702bbe0dc8"
     },
     {
@@ -630,7 +630,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "convnext_base_sweep-lr1e-4/seed_42",
-     "est_min": 9.7,
+     "est_min": 10.0,
      "config_hash": "f8ea30008abf"
     },
     {
@@ -644,7 +644,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "resnet50_sweep-lr1e-4/seed_42",
-     "est_min": 5.7,
+     "est_min": 5.8,
      "config_hash": "24fb3db4ae46"
     },
     {
@@ -658,7 +658,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "deit_base_sweep-lr1e-4/seed_42",
-     "est_min": 9.0,
+     "est_min": 7.3,
      "config_hash": "23f4d69b99be"
     },
     {
@@ -672,7 +672,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "dinov2_base_sweep-lr1e-4/seed_42",
-     "est_min": 10.7,
+     "est_min": 9.4,
      "config_hash": "61eb20029118"
     },
     {
@@ -686,7 +686,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "clip_base_sweep-lr1e-4/seed_42",
-     "est_min": 9.0,
+     "est_min": 8.1,
      "config_hash": "2521033c537d"
     }
    ]
@@ -698,7 +698,7 @@
    "requires_selected_lr": true,
    "n_jobs": 28,
    "n_sessions": 2,
-   "est_gpu_hours": 31.84,
+   "est_gpu_hours": 28.27,
    "sessions": [
     {
      "session": 1,
@@ -707,10 +707,10 @@
       [
        "vit_small__ft__s42",
        "convnext_base__ft__s42",
-       "resnet50__ft__s42",
        "vit_base__lpft__s42",
+       "vit_tiny__ft__s123",
+       "vit_small__ft__s123",
        "convnext_base__ft__s123",
-       "resnet50__ft__s123",
        "vit_base__lp__s123",
        "vit_tiny__ft__s2024",
        "vit_base__ft__s2024",
@@ -720,10 +720,10 @@
       [
        "vit_tiny__ft__s42",
        "vit_base__ft__s42",
+       "resnet50__ft__s42",
        "vit_base__lp__s42",
-       "vit_tiny__ft__s123",
-       "vit_small__ft__s123",
        "vit_base__ft__s123",
+       "resnet50__ft__s123",
        "vit_base__lpft__s123",
        "vit_small__ft__s2024",
        "convnext_base__ft__s2024",
@@ -731,12 +731,12 @@
       ]
      ],
      "est_lane_min": [
-      469.3,
-      470.6
+      497.8,
+      500.0
      ],
      "est_lane_min_safe": [
-      539.9,
-      541.3
+      572.3,
+      574.9
      ]
     },
     {
@@ -756,12 +756,12 @@
       ]
      ],
      "est_lane_min": [
-      483.9,
-      486.8
+      347.8,
+      350.8
      ],
      "est_lane_min_safe": [
-      556.5,
-      559.8
+      400.0,
+      403.4
      ]
     }
    ],
@@ -777,7 +777,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "vit_tiny_ft/seed_42",
-     "est_min": 15.1,
+     "est_min": 38.3,
      "config_hash": "9ec910363274"
     },
     {
@@ -791,7 +791,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "vit_small_ft/seed_42",
-     "est_min": 27.1,
+     "est_min": 35.0,
      "config_hash": "af1a7259cbbb"
     },
     {
@@ -805,7 +805,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "vit_base_ft/seed_42",
-     "est_min": 70.0,
+     "est_min": 62.5,
      "config_hash": "587fd080ad65"
     },
     {
@@ -819,7 +819,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "vit_large_ft/seed_42",
-     "est_min": 218.4,
+     "est_min": 154.8,
      "config_hash": "58d38f17c97a"
     },
     {
@@ -833,7 +833,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "convnext_base_ft/seed_42",
-     "est_min": 78.4,
+     "est_min": 80.8,
      "config_hash": "b3c49dc9abc8"
     },
     {
@@ -847,7 +847,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "resnet50_ft/seed_42",
-     "est_min": 33.2,
+     "est_min": 34.3,
      "config_hash": "f1a59e964d9e"
     },
     {
@@ -861,7 +861,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "vit_base_lp/seed_42",
-     "est_min": 11.2,
+     "est_min": 11.1,
      "config_hash": "f008c8f5f1f8"
     },
     {
@@ -875,7 +875,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "vit_large_lp/seed_42",
-     "est_min": 25.0,
+     "est_min": 20.6,
      "config_hash": "88d0fdc2f069"
     },
     {
@@ -889,7 +889,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "vit_base_lpft/seed_42",
-     "est_min": 78.3,
+     "est_min": 70.6,
      "config_hash": "003f63a20009"
     },
     {
@@ -903,7 +903,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "vit_large_lpft/seed_42",
-     "est_min": 240.5,
+     "est_min": 172.4,
      "config_hash": "fb1b26bd6134"
     },
     {
@@ -917,7 +917,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "vit_tiny_ft/seed_123",
-     "est_min": 15.1,
+     "est_min": 38.3,
      "config_hash": "e83bfe7d1652"
     },
     {
@@ -931,7 +931,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "vit_small_ft/seed_123",
-     "est_min": 27.1,
+     "est_min": 35.0,
      "config_hash": "84b9da9dee7a"
     },
     {
@@ -945,7 +945,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "vit_base_ft/seed_123",
-     "est_min": 70.0,
+     "est_min": 62.5,
      "config_hash": "128a3f8425a3"
     },
     {
@@ -959,7 +959,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "vit_large_ft/seed_123",
-     "est_min": 218.4,
+     "est_min": 154.8,
      "config_hash": "80d2a1182784"
     },
     {
@@ -973,7 +973,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "convnext_base_ft/seed_123",
-     "est_min": 78.4,
+     "est_min": 80.8,
      "config_hash": "61f72fb4aac1"
     },
     {
@@ -987,7 +987,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "resnet50_ft/seed_123",
-     "est_min": 33.2,
+     "est_min": 34.3,
      "config_hash": "ac9608173cf5"
     },
     {
@@ -1001,7 +1001,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "vit_base_lp/seed_123",
-     "est_min": 11.2,
+     "est_min": 11.1,
      "config_hash": "fb13d4545b29"
     },
     {
@@ -1015,7 +1015,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "vit_large_lp/seed_123",
-     "est_min": 25.0,
+     "est_min": 20.6,
      "config_hash": "bde71c7edf93"
     },
     {
@@ -1029,7 +1029,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "vit_base_lpft/seed_123",
-     "est_min": 78.3,
+     "est_min": 70.6,
      "config_hash": "0e4e84d03482"
     },
     {
@@ -1043,7 +1043,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "vit_tiny_ft/seed_2024",
-     "est_min": 15.1,
+     "est_min": 38.3,
      "config_hash": "5249790a06b9"
     },
     {
@@ -1057,7 +1057,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "vit_small_ft/seed_2024",
-     "est_min": 27.1,
+     "est_min": 35.0,
      "config_hash": "211455418f55"
     },
     {
@@ -1071,7 +1071,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "vit_base_ft/seed_2024",
-     "est_min": 70.0,
+     "est_min": 62.5,
      "config_hash": "caba41b61f45"
     },
     {
@@ -1085,7 +1085,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "vit_large_ft/seed_2024",
-     "est_min": 218.4,
+     "est_min": 154.8,
      "config_hash": "2eb41814343e"
     },
     {
@@ -1099,7 +1099,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "convnext_base_ft/seed_2024",
-     "est_min": 78.4,
+     "est_min": 80.8,
      "config_hash": "78f51f2f418a"
     },
     {
@@ -1113,7 +1113,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "resnet50_ft/seed_2024",
-     "est_min": 33.2,
+     "est_min": 34.3,
      "config_hash": "33b9a6ee0cc8"
     },
     {
@@ -1127,7 +1127,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "vit_base_lp/seed_2024",
-     "est_min": 11.2,
+     "est_min": 11.1,
      "config_hash": "d55437991062"
     },
     {
@@ -1141,7 +1141,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "vit_large_lp/seed_2024",
-     "est_min": 25.0,
+     "est_min": 20.6,
      "config_hash": "0bf81df4f865"
     },
     {
@@ -1155,7 +1155,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "vit_base_lpft/seed_2024",
-     "est_min": 78.3,
+     "est_min": 70.6,
      "config_hash": "791f7334acc9"
     }
    ]
@@ -1167,7 +1167,7 @@
    "requires_selected_lr": true,
    "n_jobs": 7,
    "n_sessions": 1,
-   "est_gpu_hours": 4.51,
+   "est_gpu_hours": 3.72,
    "sessions": [
     {
      "session": 1,
@@ -1186,12 +1186,12 @@
       ]
      ],
      "est_lane_min": [
-      130.6,
-      140.0
+      112.4,
+      110.9
      ],
      "est_lane_min_safe": [
-      150.2,
-      161.0
+      129.2,
+      127.6
      ]
     }
    ],
@@ -1207,7 +1207,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "deit_base_ft/seed_42",
-     "est_min": 70.0,
+     "est_min": 51.2,
      "config_hash": "26d1907d8c89"
     },
     {
@@ -1221,7 +1221,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "deit_base_lp/seed_42",
-     "est_min": 11.2,
+     "est_min": 9.9,
      "config_hash": "88941bc8ae64"
     },
     {
@@ -1235,7 +1235,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "dinov2_base_ft/seed_42",
-     "est_min": 89.2,
+     "est_min": 73.6,
      "config_hash": "d9c8fcb2dfe2"
     },
     {
@@ -1249,7 +1249,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "dinov2_base_lp/seed_42",
-     "est_min": 13.0,
+     "est_min": 12.2,
      "config_hash": "cc3b4cd1f47a"
     },
     {
@@ -1263,7 +1263,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "clip_base_ft/seed_42",
-     "est_min": 70.0,
+     "est_min": 59.7,
      "config_hash": "211ec303927a"
     },
     {
@@ -1277,7 +1277,7 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "clip_base_lp/seed_42",
-     "est_min": 11.2,
+     "est_min": 10.8,
      "config_hash": "201bfdf4e137"
     },
     {
@@ -1291,11 +1291,11 @@
      "max_steps": null,
      "smoke": false,
      "out_rel": "clip_base_zeroshot/seed_42",
-     "est_min": 6.0,
+     "est_min": 5.9,
      "config_hash": "9d4274307e72"
     }
    ]
   }
  },
- "plan_hash": "06b198dfc9bf8cf5"
+ "plan_hash": "b701efe499ad2849"
 }

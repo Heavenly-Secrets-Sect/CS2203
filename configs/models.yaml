@@ -102,6 +102,6 @@ clip_base:
   micro_batch: 64
   lr: null
   open_clip:            # chi cho regime zeroshot (text tower nam o open_clip, khong co o timm)
-    arch: ViT-B-16
+    arch: ViT-B-16-quickgelu   # openai dùng QuickGELU; arch ViT-B-16 thường gây cảnh báo mismatch (smoke r1)
     pretrained: openai
   notes: "CLIP ViT-B/16 openai. FT/LP dung image tower timm; zeroshot dung open_clip (import lazy)"
