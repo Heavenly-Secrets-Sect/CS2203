@@ -31,10 +31,21 @@ LR_PATH = ROOT / "configs" / "selected_lr.json"
 
 SEEDS = [42, 123, 2024]
 SWEEP_SEED = 42
-STAGE_ORDER = ["smoke", "sweep", "p0", "explore"]
+STAGE_ORDER = ["smoke", "sweep", "p0", "explore", "sweep2"]  # sweep2 = round 5: sweep mở rộng của round 2 (chạy TRƯỚC p0, xem DEVIATIONS D2)
 # Số round cố định theo stage (quy ước nhóm: tag release r<N>, zip <project>_r<N>_s<M>.zip)
 STAGE_ROUND = {s: i + 1 for i, s in enumerate(STAGE_ORDER)}
-LR_TAG = {1e-5: "1e-5", 3e-5: "3e-5", 1e-4: "1e-4"}
+SWEEP_BASE_LRS = {1e-5: "1e-5", 3e-5: "3e-5", 1e-4: "1e-4"}
+SWEEP_EXT_LRS = {3e-4: "3e-4", 1e-3: "1e-3"}
+LR_TAG = {**SWEEP_BASE_LRS, **SWEEP_EXT_LRS}
+# LR mở thêm (PREREG: best ở rìa lưới -> mở thêm một bậc), chọn sau kết quả round 2: 7 model có best=1e-4.
+# ResNet-50 chỉ đạt 14% ở 1e-4 nên mở hai bậc ngay (tối đa 2 bậc). DINOv2/CLIP best ở trong lưới: không mở.
+SWEEP2_EXT = {"vit_tiny": [3e-4], "vit_small": [3e-4], "vit_base": [3e-4], "vit_large": [3e-4],
+              "convnext_base": [3e-4], "resnet50": [3e-4, 1e-3], "deit_base": [3e-4]}
+
+
+def expected_lrs(model: str) -> list:
+    """Lưới LR mà model phải có đủ kết quả sweep trước khi chọn LR (gồm phần mở rộng)."""
+    return sorted(list(SWEEP_BASE_LRS) + SWEEP2_EXT.get(model, []))
 
 FT_SCALE = ["vit_tiny", "vit_small", "vit_base", "vit_large"]
 FT_ARCH = ["convnext_base", "resnet50"]
@@ -46,8 +57,9 @@ STAGE_DESC = {
     "sweep": "LR sweep proxy chung: 20% train, 2 epoch, {1e-5,3e-5,1e-4}, seed 42, chọn theo dev acc.",
     "p0": "Bảng chính: Full FT Ti/S/B/L/ConvNeXt-B/R50 x3 seed; LP ViT-B/L x3; LP-FT ViT-B x3, ViT-L x1.",
     "explore": "Thăm dò (1 seed, không kiểm định): DeiT/DINOv2/CLIP FT+LP, CLIP zero-shot.",
+    "sweep2": "Sweep mở rộng của round 2 (PREREG: LR tốt nhất ở rìa lưới): 3e-4 cho 7 model, thêm 1e-3 cho ResNet-50; proxy giống sweep (20% train, 2 epoch, seed 42).",
 }
-STAGE_DEPENDS = {"smoke": None, "sweep": "smoke", "p0": "sweep", "explore": "p0"}
+STAGE_DEPENDS = {"smoke": None, "sweep": "smoke", "p0": "sweep2", "explore": "p0", "sweep2": "sweep"}
 
 PROTOCOL = {  # đưa vào config_hash: đổi giao thức => đổi băm
     "epochs": 5, "batch_effective": 128, "optimizer": "AdamW", "weight_decay": 0.05,
@@ -91,9 +103,14 @@ def stage_jobs(stage: str) -> list[dict]:
         jobs.append(_smoke("vit_base", "lpft"))
         jobs.append(_smoke("clip_base", "zeroshot"))
     elif stage == "sweep":
-        for lr, tag in LR_TAG.items():
+        for lr, tag in SWEEP_BASE_LRS.items():
             for m in ALL_MODELS:
                 jobs.append(_job(m, "sweep", SWEEP_SEED, lr=lr, epochs=2, train_frac=0.2, tag=tag))
+    elif stage == "sweep2":
+        for lr, tag in SWEEP_EXT_LRS.items():
+            for m in ALL_MODELS:
+                if lr in SWEEP2_EXT.get(m, []):
+                    jobs.append(_job(m, "sweep", SWEEP_SEED, lr=lr, epochs=2, train_frac=0.2, tag=tag))
     elif stage == "p0":
         for s in SEEDS:
             for m in FT_SCALE + FT_ARCH:

@@ -22,7 +22,8 @@
   "smoke",
   "sweep",
   "p0",
-  "explore"
+  "explore",
+  "sweep2"
  ],
  "estimates": {
   "throughput_train_img_s": {
@@ -694,7 +695,7 @@
   "p0": {
    "round": 3,
    "description": "Bảng chính: Full FT Ti/S/B/L/ConvNeXt-B/R50 x3 seed; LP ViT-B/L x3; LP-FT ViT-B x3, ViT-L x1.",
-   "depends_on": "sweep",
+   "depends_on": "sweep2",
    "requires_selected_lr": true,
    "n_jobs": 28,
    "n_sessions": 2,
@@ -1295,7 +1296,158 @@
      "config_hash": "9d4274307e72"
     }
    ]
+  },
+  "sweep2": {
+   "round": 5,
+   "description": "Sweep mở rộng của round 2 (PREREG: LR tốt nhất ở rìa lưới): 3e-4 cho 7 model, thêm 1e-3 cho ResNet-50; proxy giống sweep (20% train, 2 epoch, seed 42).",
+   "depends_on": "sweep",
+   "requires_selected_lr": false,
+   "n_jobs": 8,
+   "n_sessions": 1,
+   "est_gpu_hours": 1.1,
+   "sessions": [
+    {
+     "session": 1,
+     "group": "main",
+     "lanes": [
+      [
+       "vit_small__sweep__s42__lr3e-4",
+       "vit_large__sweep__s42__lr3e-4",
+       "resnet50__sweep__s42__lr3e-4",
+       "deit_base__sweep__s42__lr3e-4"
+      ],
+      [
+       "vit_tiny__sweep__s42__lr3e-4",
+       "vit_base__sweep__s42__lr3e-4",
+       "convnext_base__sweep__s42__lr3e-4",
+       "resnet50__sweep__s42__lr1e-3"
+      ]
+     ],
+     "est_lane_min": [
+      35.7,
+      30.4
+     ],
+     "est_lane_min_safe": [
+      41.1,
+      35.0
+     ]
+    }
+   ],
+   "jobs": [
+    {
+     "id": "vit_tiny__sweep__s42__lr3e-4",
+     "model": "vit_tiny",
+     "regime": "sweep",
+     "seed": 42,
+     "lr": 0.0003,
+     "epochs": 2,
+     "train_frac": 0.2,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "vit_tiny_sweep-lr3e-4/seed_42",
+     "est_min": 6.2,
+     "config_hash": "ad2b236dabfd"
+    },
+    {
+     "id": "vit_small__sweep__s42__lr3e-4",
+     "model": "vit_small",
+     "regime": "sweep",
+     "seed": 42,
+     "lr": 0.0003,
+     "epochs": 2,
+     "train_frac": 0.2,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "vit_small_sweep-lr3e-4/seed_42",
+     "est_min": 5.9,
+     "config_hash": "a499ab9940da"
+    },
+    {
+     "id": "vit_base__sweep__s42__lr3e-4",
+     "model": "vit_base",
+     "regime": "sweep",
+     "seed": 42,
+     "lr": 0.0003,
+     "epochs": 2,
+     "train_frac": 0.2,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "vit_base_sweep-lr3e-4/seed_42",
+     "est_min": 8.4,
+     "config_hash": "f15d27630cb5"
+    },
+    {
+     "id": "vit_large__sweep__s42__lr3e-4",
+     "model": "vit_large",
+     "regime": "sweep",
+     "seed": 42,
+     "lr": 0.0003,
+     "epochs": 2,
+     "train_frac": 0.2,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "vit_large_sweep-lr3e-4/seed_42",
+     "est_min": 16.7,
+     "config_hash": "a440e6d425dc"
+    },
+    {
+     "id": "convnext_base__sweep__s42__lr3e-4",
+     "model": "convnext_base",
+     "regime": "sweep",
+     "seed": 42,
+     "lr": 0.0003,
+     "epochs": 2,
+     "train_frac": 0.2,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "convnext_base_sweep-lr3e-4/seed_42",
+     "est_min": 10.0,
+     "config_hash": "dff1076ab57d"
+    },
+    {
+     "id": "resnet50__sweep__s42__lr3e-4",
+     "model": "resnet50",
+     "regime": "sweep",
+     "seed": 42,
+     "lr": 0.0003,
+     "epochs": 2,
+     "train_frac": 0.2,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "resnet50_sweep-lr3e-4/seed_42",
+     "est_min": 5.8,
+     "config_hash": "91d46d029241"
+    },
+    {
+     "id": "deit_base__sweep__s42__lr3e-4",
+     "model": "deit_base",
+     "regime": "sweep",
+     "seed": 42,
+     "lr": 0.0003,
+     "epochs": 2,
+     "train_frac": 0.2,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "deit_base_sweep-lr3e-4/seed_42",
+     "est_min": 7.3,
+     "config_hash": "6dfab843b598"
+    },
+    {
+     "id": "resnet50__sweep__s42__lr1e-3",
+     "model": "resnet50",
+     "regime": "sweep",
+     "seed": 42,
+     "lr": 0.001,
+     "epochs": 2,
+     "train_frac": 0.2,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "resnet50_sweep-lr1e-3/seed_42",
+     "est_min": 5.8,
+     "config_hash": "17c231a040fa"
+    }
+   ]
   }
  },
- "plan_hash": "b701efe499ad2849"
+ "plan_hash": "9cfa169b1d03c6d8"
 }

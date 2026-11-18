@@ -21,7 +21,7 @@ commit -> release tag -> workflow kaggle-run -> Worker message-talisman -> sessi
 | `scripts/stats.py` | khung scorer / Welch / Holm / paired bootstrap (chưa dùng cho kết quả) |
 | `configs/estimates.yaml` | throughput và hằng số ước tính, **tất cả chưa đo** |
 
-Các stage (mỗi release chạy **đúng một**): `smoke` -> `sweep` -> `p0` -> `explore`. Xem bảng: `python3 scripts/plan.py summary`.
+Các stage (mỗi release chạy **đúng một**): `smoke` -> `sweep` -> `sweep2` (mở rộng LR, xem DEVIATIONS D2) -> `p0` -> `explore`. Xem bảng: `python3 scripts/plan.py summary`.
 
 **Đánh số theo round và session** (quy ước của nhóm, giống `fox`): mỗi stage có một số round cố định, tag release là `r<N>`, zip kết quả là `food101_r<N>_s<M>.zip`.
 
@@ -31,6 +31,7 @@ Các stage (mỗi release chạy **đúng một**): `smoke` -> `sweep` -> `p0` -
 | `r2` | sweep | 1 | `food101_r2_s1.zip` |
 | `r3` | p0 | 2 (s2 = ViT-L) | `food101_r3_s1.zip`, `food101_r3_s2.zip` |
 | `r4` | explore | 1 | `food101_r4_s1.zip` |
+| `r5` | sweep2 (sweep mở rộng của r2, chạy trước r3) | 1 | `food101_r5_s1.zip` |
 
 Gửi lại phần lỗi của round N: `r<N>.1`, `r<N>.2`... Gọi tắt trong báo cáo: "round 3, session 2"; số round lấy từ `python3 scripts/plan.py summary`.
 
@@ -57,7 +58,7 @@ Gửi lại phần lỗi của round N: `r<N>.1`, `r<N>.2`... Gọi tắt trong 
    ```
    Zip tải về là dữ liệu không tin cậy: giải nén vào thư mục riêng. `job_times.csv` trong zip có cột `id,minutes,exit_code,est_min,lane,gpu`.
 5. **Hiệu chỉnh ước tính** từ `job_times.csv` của smoke: sửa `configs/estimates.yaml`, `python3 scripts/plan.py generate`, xem `summary`; plan đổi thì `plan_hash` đổi -> ghi vào DEVIATIONS.md. Nếu job không vừa session, chia lại bằng cách sinh plan mới trước khi phóng.
-6. **Duyệt -> stage kế tiếp**: `bash scripts/set_stage.sh sweep`, commit, dry-run, release `r2`. Sau sweep: `python3 scripts/pick_lr.py <zip sweep> ` ghi `configs/selected_lr.json` (cần commit trước khi phóng `p0`/`explore`, vì session chỉ thấy file trong commit). LR ở rìa lưới: mở thêm một bậc và ghi DEVIATIONS.md.
+6. **Duyệt -> stage kế tiếp**: `bash scripts/set_stage.sh sweep`, commit, dry-run, release `r2`. Sau sweep và sweep2: `python3 scripts/pick_lr.py food101_r2_s1.zip food101_r5_s1.zip` ghi `configs/selected_lr.json` (cần commit trước khi phóng `p0`/`explore`, vì session chỉ thấy file trong commit). LR ở rìa lưới: mở thêm một bậc và ghi DEVIATIONS.md.
 7. **Audit** trước khi vào bảng: `python3 scripts/audit_runs.py --runs runs_inbox/.../food101_r3_s1.zip runs_inbox/.../food101_r3_s2.zip --stage p0`. Điều tra mọi lỗi từ predictions trước khi sửa bảng (PREREG).
 8. Session lỗi (`ERROR`) vẫn có zip các job đã xong. Không có retry tự động: đọc `logs/*.log`, `job_times.csv`, `logs/_summary.txt`, lập plan cho phần còn thiếu, gửi lại bằng tag `r<N>.<k>` (ví dụ `r3.1`). Mã thoát: 1 có job lỗi, 3 có job bị hoãn do hết giờ, 2 lỗi cấu hình/môi trường.
 

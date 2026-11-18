@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Chọn LR theo DEV acc từ kết quả stage sweep (PREREG: không dùng test). Ghi configs/selected_lr.json.
 
-  python3 scripts/pick_lr.py runs_inbox/.../food101_r2_s1.zip [...] [--out configs/selected_lr.json]
+  python3 scripts/pick_lr.py food101_r2_s1.zip food101_r5_s1.zip [...]   # round 2 + round 5 (sweep mở rộng) [--out configs/selected_lr.json]
 LR tốt nhất ở rìa lưới => in cảnh báo: PREREG yêu cầu mở thêm một bậc cho model đó và ghi DEVIATIONS.md (cần plan mới).
 Khoá dev acc trong metrics.json là giả định (DEV_KEYS); sửa nếu food101.run_job dùng tên khác.
 """
@@ -9,7 +9,7 @@ import argparse, json, sys, tempfile, zipfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from plan import ALL_MODELS, LR_TAG, LR_PATH  # noqa: E402
+from plan import ALL_MODELS, LR_TAG, LR_PATH, expected_lrs  # noqa: E402
 
 DEV_KEYS = ("dev_acc", "dev_top1", "val_acc", "dev.acc", "dev.top1", "dev.accuracy", "dev_accuracy")
 
@@ -54,11 +54,11 @@ def main(argv=None) -> int:
                             sys.exit(f"không thấy dev acc trong {f.name} của {m} lr={tag}; sửa DEV_KEYS")
                         res.setdefault(m, {})[lr] = acc
         sel, problems = {}, []
-        grid = sorted(LR_TAG)
         for m in ALL_MODELS:
             got = res.get(m, {})
-            if len(got) != len(grid):
-                problems.append(f"{m}: có {len(got)}/{len(grid)} LR")
+            grid = expected_lrs(m)
+            if sorted(got) != grid:
+                problems.append(f"{m}: có {len(got)}/{len(grid)} LR (thiếu {[l for l in grid if l not in got]}); cần zip của round 2 và round 5")
                 continue
             best = max(got, key=lambda k: (got[k], -k))
             sel[m] = best
