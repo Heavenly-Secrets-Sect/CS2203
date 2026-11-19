@@ -1,7 +1,7 @@
 # Khai báo chạy thực nghiệm trên Kaggle cho bot message-talisman (xem docs/kaggle-ci trong repo đó).
 # Mỗi session dưới đây thành một version của notebook, chạy trên account Kaggle còn quota.
 notebook: food101-ci          # slug riêng cho CI; ĐỪNG trỏ vào notebook chạy tay (saveKernel thay source bằng launcher)
-sessions: 2                   # PHẢI khớp n_sessions của STAGE trong scripts/run_plan.json. Đổi bằng: bash scripts/set_stage.sh <stage>
+sessions: 1                   # PHẢI khớp n_sessions của STAGE trong scripts/run_plan.json. Đổi bằng: bash scripts/set_stage.sh <stage>
 accelerator: gpu              # gpu = 2x Tesla T4
 internet: true                # cần để clone repo, pip, tải model và dataset từ HF
 budget_hours: 10              # giờ tối đa mỗi session; truyền vào lệnh run dưới dạng BUDGET_HOURS
@@ -9,4 +9,4 @@ setup: ""                     # run_kaggle_food101.sh tự kiểm GPU, pip insta
 # STAGE là stage DUY NHẤT của lần phóng này (smoke | sweep | p0 | explore). Mỗi release chạy một stage;
 # đổi stage bằng scripts/set_stage.sh rồi commit, đừng sửa tay. Mặc định smoke.
 # FOOD101_PERSIST_ROOT đẩy runs/log/checkpoint/cache sang /kaggle/temp để /kaggle/working chỉ còn ĐÚNG MỘT zip.
-run: STAGE=p0a FOOD101_PERSIST_ROOT=/kaggle/temp/food101-persist bash run_kaggle_food101.sh {session}
+run: STAGE=explore FOOD101_PERSIST_ROOT=/kaggle/temp/food101-persist bash run_kaggle_food101.sh {session}
