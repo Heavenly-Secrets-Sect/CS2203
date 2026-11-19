@@ -21,6 +21,8 @@ commit -> release tag -> workflow kaggle-run -> Worker message-talisman -> sessi
 | `scripts/stats.py` | khung scorer / Welch / Holm / paired bootstrap (chưa dùng cho kết quả) |
 | `configs/estimates.yaml` | throughput và hằng số ước tính, **tất cả chưa đo** |
 
+**Quy tắc round:** mỗi release là MỘT round gồm nhiều session; bot xếp hàng session chưa có tài khoản (FIFO) và không resume round đã kết thúc. Việc độc lập chạy cùng lúc phải gom thành MỘT stage, không tách release (r3/r4/r7 là ngoại lệ, DEVIATIONS D7). Chỉ tách round khi stage sau cần kết quả stage trước.
+
 Các stage (mỗi release chạy **đúng một**): `smoke` -> `sweep` -> `sweep2` -> `sweep3` (mở rộng LR, DEVIATIONS D2/D4) và `p0a`, `explore` (chạy song song, không chờ sweep3), rồi `p0b` sau sweep3 (DEVIATIONS D5). Xem bảng: `python3 scripts/plan.py summary`.
 
 **Đánh số theo round và session** (quy ước của nhóm, giống `fox`): mỗi stage có một số round cố định, tag release là `r<N>`, zip kết quả là `food101_r<N>_s<M>.zip`.
