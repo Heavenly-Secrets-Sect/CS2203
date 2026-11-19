@@ -3,7 +3,7 @@
 
 Bao gồm: outputs/**/{metrics.json,history.json,run_config.yaml,test_predictions.jsonl,*.npy},
 logs/*.log, job_times.csv, ci_env.json. KHÔNG bao gồm checkpoint (*.pt, *.pth, *.ckpt, *.safetensors, *.bin)
-hay cache. Gọi sau MỖI job: session bị cắt chỉ mất job đang chạy.
+hay cache, TRỪ `model_fp16.pt` (job --xai, DEVIATIONS D8) và `xai/*.npz`. Gọi sau MỖI job: session bị cắt chỉ mất job đang chạy.
 """
 import argparse
 import os
@@ -11,12 +11,15 @@ import sys
 import zipfile
 from pathlib import Path
 
-KEEP_EXT = {".json", ".jsonl", ".yaml", ".yml", ".csv", ".log", ".npy", ".txt"}
+KEEP_EXT = {".json", ".jsonl", ".yaml", ".yml", ".csv", ".log", ".npy", ".npz", ".txt"}
+KEEP_NAMES = {"model_fp16.pt"}   # checkpoint fp16 của job --xai: duy nhất được phép
 DENY_EXT = {".pt", ".pth", ".ckpt", ".safetensors", ".bin", ".pkl"}
 DENY_DIR = {"ckpt", "checkpoints", "cache", "hf", "torch", "__pycache__"}
 
 
 def wanted(rel: Path) -> bool:
+    if rel.name in KEEP_NAMES:
+        return True
     if rel.suffix.lower() in DENY_EXT or any(p in DENY_DIR for p in rel.parts[:-1]):
         return False
     return rel.suffix.lower() in KEEP_EXT
@@ -40,7 +43,7 @@ def main(argv=None) -> int:
                 if p.is_file():
                     rel = p.relative_to(persist)
                     if wanted(rel):
-                        comp = zipfile.ZIP_STORED if p.suffix == ".npy" else zipfile.ZIP_DEFLATED
+                        comp = zipfile.ZIP_STORED if p.suffix in (".npy", ".npz", ".pt") else zipfile.ZIP_DEFLATED
                         z.write(p, rel.as_posix(), compress_type=comp)
                         n += 1
         for name in ("job_times.csv", "ci_env.json"):

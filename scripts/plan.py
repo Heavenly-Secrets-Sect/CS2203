@@ -4,7 +4,7 @@
 Lệnh:
   generate [--out FILE]        sinh run_plan.json (xác định; cần pyyaml để đọc configs/estimates.yaml)
   check [--regen] [--tag T]    kiểm run_plan.json và kaggle-run.yml (sessions, STAGE); --regen: sinh lại và so băm;
-                               --tag: tag release phải dạng r<N>[.<k>] với N = round của STAGE (smoke=r1, sweep=r2, p0a=r3, explore=r4, sweep2=r5, sweep3=r6, p0b=r7; dry-* để diễn tập)
+                               --tag: tag release phải dạng r<N>[.<k>] với N = round của STAGE (smoke=r1, sweep=r2, p0a=r3, explore=r4, sweep2=r5, sweep3=r6, p0b=r7, xai=r8; dry-* để diễn tập)
   set-stage STAGE              sửa kaggle-run.yml (sessions và STAGE=) cho đúng stage; KHÔNG tự đoán stage kế tiếp
   summary                      bảng stage / session / GPU-giờ
   session-jobs --stage S --session N   TSV cho run_kaggle_food101.sh
@@ -31,8 +31,9 @@ LR_PATH = ROOT / "configs" / "selected_lr.json"
 
 SEEDS = [42, 123, 2024]
 SWEEP_SEED = 42
-STAGE_ORDER = ["smoke", "sweep", "p0a", "explore", "sweep2", "sweep3", "p0b"]
+STAGE_ORDER = ["smoke", "sweep", "p0a", "explore", "sweep2", "sweep3", "p0b", "xai"]
 # Round: smoke=r1 sweep=r2 p0a=r3 explore=r4 sweep2=r5 sweep3=r6 p0b=r7. sweep2/sweep3 = sweep mở rộng của r2 (DEVIATIONS D2/D4);
+# xai = r8: huấn luyện lại seed 42 (ViT-B/L, ConvNeXt-B) + checkpoint fp16 + XAI (DEVIATIONS D8).
 # p0 tách thành p0a (LR đã chốt: ViT-B/L) và p0b (chờ sweep3). DEVIATIONS D5.
 # Số round cố định theo stage (quy ước nhóm: tag release r<N>, zip <project>_r<N>_s<M>.zip)
 STAGE_ROUND = {s: i + 1 for i, s in enumerate(STAGE_ORDER)}
@@ -69,9 +70,10 @@ STAGE_DESC = {
     "p0b": "Bảng chính, phần chờ sweep3: Full FT ViT-Ti/S, ConvNeXt-B, ResNet-50 x3 seed; thêm DeiT-B FT (thăm dò, 1 seed).",
     "explore": "Thăm dò (1 seed, không kiểm định): DINOv2/CLIP FT+LP, DeiT LP, CLIP zero-shot (quickgelu).",
     "sweep3": "Sweep mở rộng lần cuối (D4): 1e-3 cho ViT-Ti/S, ConvNeXt-B, DeiT-B; 3e-3 cho ResNet-50; proxy giống sweep.",
+    "xai": "RQ3: huấn luyện lại Full FT seed 42 (ViT-B, ViT-L, ConvNeXt-B) với LR đã chốt, lưu checkpoint fp16, chạy XAI (rollout, Grad-CAM, IG; deletion/insertion; sanity) trên mẫu test cố định.",
     "sweep2": "Sweep mở rộng của round 2 (PREREG: LR tốt nhất ở rìa lưới): 3e-4 cho 7 model, thêm 1e-3 cho ResNet-50; proxy giống sweep (20% train, 2 epoch, seed 42).",
 }
-STAGE_DEPENDS = {"smoke": None, "sweep": "smoke", "p0a": "sweep2", "explore": "sweep2", "sweep2": "sweep", "sweep3": "sweep2", "p0b": "sweep3"}
+STAGE_DEPENDS = {"smoke": None, "sweep": "smoke", "p0a": "sweep2", "explore": "sweep2", "sweep2": "sweep", "sweep3": "sweep2", "p0b": "sweep3", "xai": "sweep3"}
 
 PROTOCOL = {  # đưa vào config_hash: đổi giao thức => đổi băm
     "epochs": 5, "batch_effective": 128, "optimizer": "AdamW", "weight_decay": 0.05,
@@ -86,18 +88,27 @@ SMOKE_FRAC = 0.05
 SMOKE_LR = 3e-5   # chỉ để đường ống chạy (run_job đòi --lr cho ft/lpft); không dùng cho kết quả
 
 
-def _job(model, regime, seed, *, lr=None, epochs=None, train_frac=None, smoke=False, tag="", max_steps=None):
+XAI_MIN = {"vit_base": 15.0, "convnext_base": 15.0, "vit_large": 50.0}   # thời gian XAI mỗi job, CHƯA ĐO (ước từ số lần forward/backward fp32)
+
+
+def _job(model, regime, seed, *, lr=None, epochs=None, train_frac=None, smoke=False, tag="", max_steps=None, xai=False):
     """lr: số, hoặc "selected" (đọc configs/selected_lr.json lúc chạy), hoặc None."""
     jid = f"{model}__{regime}__s{seed}"
     out = f"{model}_{regime}/seed_{seed}"
     if regime == "sweep":
         jid += f"__lr{tag}"
         out = f"{model}_sweep-lr{tag}/seed_{seed}"
+    if xai:
+        jid = f"{model}__{regime}-xai__s{seed}"
+        out = f"{model}_{regime}-xai/seed_{seed}"
     if smoke:
         jid += "__smoke"
         out = f"smoke/{out}"
-    return {"id": jid, "model": model, "regime": regime, "seed": seed, "lr": lr,
-            "epochs": epochs, "train_frac": train_frac, "max_steps": max_steps, "smoke": smoke, "out_rel": out}
+    job = {"id": jid, "model": model, "regime": regime, "seed": seed, "lr": lr,
+           "epochs": epochs, "train_frac": train_frac, "max_steps": max_steps, "smoke": smoke, "out_rel": out}
+    if xai:   # chỉ job xai mới có khoá này: không đổi config_hash/plan của các job cũ
+        job["xai"] = True
+    return job
 
 
 def _smoke(model, regime):
@@ -147,6 +158,9 @@ def stage_jobs(stage: str) -> list[dict]:
             jobs.append(_job(m, "lp", 42))
         jobs.append(_job("deit_base", "lp", 42))
         jobs.append(_job("clip_base", "zeroshot", 42))
+    elif stage == "xai":
+        for m in ("vit_base", "convnext_base", "vit_large"):
+            jobs.append(_job(m, "ft", 42, lr="selected", xai=True))
     else:
         raise ValueError(stage)
     return jobs
@@ -191,11 +205,15 @@ def estimate_minutes(job: dict, est: dict) -> float:
         m = (n_te + n_dev) / inf / 60 + 1.0
     else:
         raise ValueError(reg)
+    if job.get("xai"):
+        m += XAI_MIN[job["model"]]
     return round(m + over, 1)
 
 
 def config_hash(job: dict) -> str:
     core = {k: job[k] for k in ("model", "regime", "seed", "lr", "epochs", "train_frac", "max_steps", "smoke")}
+    if job.get("xai"):
+        core["xai"] = True
     core["protocol"] = PROTOCOL
     blob = json.dumps(core, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
     return hashlib.sha256(blob.encode()).hexdigest()[:12]
@@ -452,6 +470,8 @@ def cmd_session_jobs(args) -> int:
                 a += ["--train-frac", str(j["train_frac"])]
             if j.get("max_steps"):
                 a += ["--max-steps", str(j["max_steps"])]
+            if j.get("xai"):
+                a += ["--xai"]
             rows.append((jid, li, j["est_min"], j["out_rel"], " ".join(a)))
     for r in rows:
         print("\t".join(str(x) for x in r))

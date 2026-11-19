@@ -36,6 +36,7 @@ def parse_args(argv=None):
     # co moi, mac dinh khong doi hanh vi
     p.add_argument("--micro-batch", type=int, default=None)
     p.add_argument("--save-ckpt", action="store_true")
+    p.add_argument("--xai", action="store_true", help="sau khi huan luyen: luu checkpoint fp16 (model_fp16.pt) va chay XAI (RQ3) tren mau test co dinh")
     p.add_argument("--no-check-counts", action="store_true")
     p.add_argument("--skip-if-done", action="store_true", help="bo qua neu DIR da co file DONE")
     return p.parse_args(argv)
@@ -172,6 +173,10 @@ def run(args):
         if args.save_ckpt:
             import torch
             torch.save(model.state_dict(), out / "checkpoint.pt")
+        if args.xai:
+            import torch
+            torch.save({k: v.half() if v.is_floating_point() else v for k, v in model.state_dict().items()},
+                       out / "model_fp16.pt")
     t_train = time.time() - t_train0
 
     # ---- ghi output (logits float16 -> scorer tinh lai TU FILE)
@@ -187,6 +192,17 @@ def run(args):
         metrics["test"] = E.score_files(out / "test_logits.npy", gold, cfg["metrics"]["ece_bins"])
     write_json(out / "metrics.json", metrics)
     write_json(out / "history.json", history)
+
+    if args.xai and model is not None:   # sau khi ket qua chinh da ghi: loi XAI khong lam mat metrics/logits
+        try:
+            from . import xai as X
+            sample = X.fixed_sample(np.asarray(test_ds.labels), per_class=1 if smoke else 2)
+            X.run_xai(model, test_ds, sample, device, out, log=log,
+                      test_top1=metrics.get("test", {}).get("top1"), n_demo=min(X.N_DEMO, len(sample)))
+        except Exception as e:  # noqa: BLE001
+            import traceback
+            (out / "xai_error.txt").write_text(traceback.format_exc(), encoding="utf-8")
+            log(f"[xai] LOI: {e!r} (ket qua chinh van duoc giu)")
 
     if smoke:
         shutil.rmtree(sdir, ignore_errors=True)

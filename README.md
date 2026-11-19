@@ -23,7 +23,7 @@ commit -> release tag -> workflow kaggle-run -> Worker message-talisman -> sessi
 
 **Quy tắc round:** mỗi release là MỘT round gồm nhiều session; bot xếp hàng session chưa có tài khoản (FIFO) và không resume round đã kết thúc. Việc độc lập chạy cùng lúc phải gom thành MỘT stage, không tách release (r3/r4/r7 là ngoại lệ, DEVIATIONS D7). Chỉ tách round khi stage sau cần kết quả stage trước.
 
-Các stage (mỗi release chạy **đúng một**): `smoke` -> `sweep` -> `sweep2` -> `sweep3` (mở rộng LR, DEVIATIONS D2/D4) và `p0a`, `explore` (chạy song song, không chờ sweep3), rồi `p0b` sau sweep3 (DEVIATIONS D5). Xem bảng: `python3 scripts/plan.py summary`.
+Các stage (mỗi release chạy **đúng một**): `smoke` -> `sweep` -> `sweep2` -> `sweep3` (mở rộng LR, DEVIATIONS D2/D4) và `p0a`, `explore` (chạy song song, không chờ sweep3), rồi `p0b` và `xai` sau sweep3 (DEVIATIONS D5, D8). Xem bảng: `python3 scripts/plan.py summary`.
 
 **Đánh số theo round và session** (quy ước của nhóm, giống `fox`): mỗi stage có một số round cố định, tag release là `r<N>`, zip kết quả là `food101_r<N>_s<M>.zip`.
 
@@ -36,6 +36,7 @@ Các stage (mỗi release chạy **đúng một**): `smoke` -> `sweep` -> `sweep
 | `r5` | sweep2 (sweep mở rộng của r2) | 1 | `food101_r5_s1.zip` |
 | `r6` | sweep3 (mở rộng lần cuối) | 1 | `food101_r6_s1.zip` |
 | `r7` | p0b (ViT-Ti/S, ConvNeXt-B, ResNet-50 FT; DeiT-B FT) | 1 | `food101_r7_s1.zip` |
+| `r8` | xai (ViT-B, ConvNeXt-B, ViT-L FT seed 42 + checkpoint fp16 + XAI) | 2 (s2 = ViT-L) | `food101_r8_s1.zip`, `food101_r8_s2.zip` |
 
 Gửi lại phần lỗi của round N: `r<N>.1`, `r<N>.2`... Gọi tắt trong báo cáo: "round 3, session 2"; số round lấy từ `python3 scripts/plan.py summary`.
 

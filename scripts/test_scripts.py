@@ -124,5 +124,23 @@ class StatsTests(unittest.TestCase):
         self.assertEqual(b["diff"], 0.0)
 
 
+
+class PackXaiTest(unittest.TestCase):
+    def test_only_fp16_checkpoint_allowed(self):
+        import pack_runs
+        from pathlib import Path as P
+        self.assertTrue(pack_runs.wanted(P("outputs/vit_base_ft-xai/seed_42/model_fp16.pt")))
+        self.assertTrue(pack_runs.wanted(P("outputs/vit_base_ft-xai/seed_42/xai/per_image.npz")))
+        self.assertFalse(pack_runs.wanted(P("outputs/vit_base_ft/seed_42/checkpoint.pt")))
+        self.assertFalse(pack_runs.wanted(P("outputs/x/model.safetensors")))
+
+    def test_xai_stage_plan(self):
+        p = plan.build_plan(plan.load_estimates())
+        st = p["stages"]["xai"]
+        self.assertEqual(st["n_jobs"], 3)
+        self.assertTrue(all(j.get("xai") and j["seed"] == 42 and j["lr"] == "selected" for j in st["jobs"]))
+        self.assertEqual(st["n_sessions"], 2)
+
+
 if __name__ == "__main__":
     unittest.main()
