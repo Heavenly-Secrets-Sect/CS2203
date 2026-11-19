@@ -9,4 +9,4 @@ setup: ""                     # run_kaggle_food101.sh tự kiểm GPU, pip insta
 # STAGE là stage DUY NHẤT của lần phóng này (smoke | sweep | p0 | explore). Mỗi release chạy một stage;
 # đổi stage bằng scripts/set_stage.sh rồi commit, đừng sửa tay. Mặc định smoke.
 # FOOD101_PERSIST_ROOT đẩy runs/log/checkpoint/cache sang /kaggle/temp để /kaggle/working chỉ còn ĐÚNG MỘT zip.
-run: STAGE=explore FOOD101_PERSIST_ROOT=/kaggle/temp/food101-persist bash run_kaggle_food101.sh {session}
+run: STAGE=p0b FOOD101_PERSIST_ROOT=/kaggle/temp/food101-persist bash run_kaggle_food101.sh {session}
