@@ -125,6 +125,16 @@ class StatsTests(unittest.TestCase):
 
 
 
+class ScorePrecisionRecallTest(unittest.TestCase):
+    def test_macro_precision_recall_balanced(self):
+        y = np.array([0, 0, 1, 1, 2, 2])
+        lg = np.eye(3)[np.array([0, 1, 1, 1, 2, 0])] * 5.0     # dự đoán: 0,1,1,1,2,0
+        s = stats.score(lg, y)
+        self.assertAlmostEqual(s["top1"], 4 / 6)
+        self.assertAlmostEqual(s["macro_recall"], s["top1"])       # lớp cân bằng: macro recall = top-1
+        self.assertAlmostEqual(s["macro_precision"], (1 / 2 + 2 / 3 + 1) / 3)
+
+
 class PackXaiTest(unittest.TestCase):
     def test_only_fp16_checkpoint_allowed(self):
         import pack_runs

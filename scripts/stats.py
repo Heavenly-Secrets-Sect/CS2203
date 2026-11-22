@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """KHUNG thống kê theo PREREG.md (một scorer duy nhất từ logits). Chưa dùng cho kết quả; kiểm thử bằng dữ liệu giả.
 
-score(logits, labels)            top1, top5, macro-F1, NLL, ECE (15 bin) -- tính từ logits đã lưu
+score(logits, labels)            top1, top5, macro precision/recall/F1, NLL, ECE (15 bin) -- tính từ logits đã lưu
 welch(a, b)                      Welch hai phía (n=3 mỗi nhóm), mean/SD ddof=1 từ điểm chưa làm tròn
 holm(pvals)                      hiệu chỉnh Holm trong một family
 paired_bootstrap(la, lb, y, B)   hiệu top-1 (A - B) trên cùng ảnh test, CI 95% (chỉ bất định do lấy mẫu test)
@@ -31,12 +31,14 @@ def score(logits: np.ndarray, y: np.ndarray, n_bins: int = 15) -> dict:
         m = (conf > lo) & (conf <= hi)
         if m.any():
             ece += m.mean() * abs(correct[m].mean() - conf[m].mean())
-    f1 = []
+    f1, prec, rec = [], [], []
     for c in range(k):
         tp = np.sum((pred == c) & (y == c)); fp = np.sum((pred == c) & (y != c)); fn = np.sum((pred != c) & (y == c))
         f1.append(0.0 if tp == 0 else 2 * tp / (2 * tp + fp + fn))
+        prec.append(0.0 if tp + fp == 0 else tp / (tp + fp))
+        rec.append(0.0 if tp + fn == 0 else tp / (tp + fn))
     return {"top1": float(correct.mean()), "top5": float((top5 == y[:, None]).any(1).mean()),
-            "macro_f1": float(np.mean(f1)), "nll": float(-lp[np.arange(n), y].mean()), "ece": float(ece)}
+            "macro_f1": float(np.mean(f1)), "macro_precision": float(np.mean(prec)), "macro_recall": float(np.mean(rec)), "nll": float(-lp[np.arange(n), y].mean()), "ece": float(ece)}
 
 
 def welch(a, b) -> dict:

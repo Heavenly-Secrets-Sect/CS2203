@@ -26,7 +26,8 @@
   "sweep2",
   "sweep3",
   "p0b",
-  "xai"
+  "xai",
+  "multiseed"
  ],
  "estimates": {
   "throughput_train_img_s": {
@@ -1683,7 +1684,128 @@
      "config_hash": "7e46d0050c11"
     }
    ]
+  },
+  "multiseed": {
+   "round": 9,
+   "description": "Thêm seed 123 và 2024 cho các cấu hình fine-tuning chỉ có seed 42: DINOv2-B, CLIP-B, DeiT-B (đồ án chỉ báo cáo fine-tuning).",
+   "depends_on": "sweep3",
+   "requires_selected_lr": true,
+   "n_jobs": 6,
+   "n_sessions": 1,
+   "est_gpu_hours": 6.15,
+   "sessions": [
+    {
+     "session": 1,
+     "group": "main",
+     "lanes": [
+      [
+       "dinov2_base__ft__s123",
+       "clip_base__ft__s123",
+       "deit_base__ft__s123"
+      ],
+      [
+       "dinov2_base__ft__s2024",
+       "clip_base__ft__s2024",
+       "deit_base__ft__s2024"
+      ]
+     ],
+     "est_lane_min": [
+      184.5,
+      184.5
+     ],
+     "est_lane_min_safe": [
+      212.2,
+      212.2
+     ]
+    }
+   ],
+   "jobs": [
+    {
+     "id": "dinov2_base__ft__s123",
+     "model": "dinov2_base",
+     "regime": "ft",
+     "seed": 123,
+     "lr": "selected",
+     "epochs": null,
+     "train_frac": null,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "dinov2_base_ft/seed_123",
+     "est_min": 73.6,
+     "config_hash": "b4314dcdd11c"
+    },
+    {
+     "id": "clip_base__ft__s123",
+     "model": "clip_base",
+     "regime": "ft",
+     "seed": 123,
+     "lr": "selected",
+     "epochs": null,
+     "train_frac": null,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "clip_base_ft/seed_123",
+     "est_min": 59.7,
+     "config_hash": "6c7c2c68366f"
+    },
+    {
+     "id": "deit_base__ft__s123",
+     "model": "deit_base",
+     "regime": "ft",
+     "seed": 123,
+     "lr": "selected",
+     "epochs": null,
+     "train_frac": null,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "deit_base_ft/seed_123",
+     "est_min": 51.2,
+     "config_hash": "bc5baa3b2300"
+    },
+    {
+     "id": "dinov2_base__ft__s2024",
+     "model": "dinov2_base",
+     "regime": "ft",
+     "seed": 2024,
+     "lr": "selected",
+     "epochs": null,
+     "train_frac": null,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "dinov2_base_ft/seed_2024",
+     "est_min": 73.6,
+     "config_hash": "cb730c83f524"
+    },
+    {
+     "id": "clip_base__ft__s2024",
+     "model": "clip_base",
+     "regime": "ft",
+     "seed": 2024,
+     "lr": "selected",
+     "epochs": null,
+     "train_frac": null,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "clip_base_ft/seed_2024",
+     "est_min": 59.7,
+     "config_hash": "b38201695ea8"
+    },
+    {
+     "id": "deit_base__ft__s2024",
+     "model": "deit_base",
+     "regime": "ft",
+     "seed": 2024,
+     "lr": "selected",
+     "epochs": null,
+     "train_frac": null,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "deit_base_ft/seed_2024",
+     "est_min": 51.2,
+     "config_hash": "fa9eca42a7ae"
+    }
+   ]
   }
  },
- "plan_hash": "6ed1b24d7b409b03"
+ "plan_hash": "fa90ba1c8275f80e"
 }

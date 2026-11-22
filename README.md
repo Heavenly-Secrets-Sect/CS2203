@@ -37,6 +37,7 @@ Các stage (mỗi release chạy **đúng một**): `smoke` -> `sweep` -> `sweep
 | `r6` | sweep3 (mở rộng lần cuối) | 1 | `food101_r6_s1.zip` |
 | `r7` | p0b (ViT-Ti/S, ConvNeXt-B, ResNet-50 FT; DeiT-B FT) | 1 | `food101_r7_s1.zip` |
 | `r8` | xai (ViT-B, ConvNeXt-B, ViT-L FT seed 42 + checkpoint fp16 + XAI) | 2 (s2 = ViT-L) | `food101_r8_s1.zip`, `food101_r8_s2.zip` |
+| `r9` | multiseed (seed 123 và 2024 cho DINOv2-B, CLIP-B, DeiT-B fine-tuning) | 1 | `food101_r9_s1.zip` |
 
 Gửi lại phần lỗi của round N: `r<N>.1`, `r<N>.2`... Gọi tắt trong báo cáo: "round 3, session 2"; số round lấy từ `python3 scripts/plan.py summary`.
 

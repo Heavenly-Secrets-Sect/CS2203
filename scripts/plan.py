@@ -4,7 +4,7 @@
 Lệnh:
   generate [--out FILE]        sinh run_plan.json (xác định; cần pyyaml để đọc configs/estimates.yaml)
   check [--regen] [--tag T]    kiểm run_plan.json và kaggle-run.yml (sessions, STAGE); --regen: sinh lại và so băm;
-                               --tag: tag release phải dạng r<N>[.<k>] với N = round của STAGE (smoke=r1, sweep=r2, p0a=r3, explore=r4, sweep2=r5, sweep3=r6, p0b=r7, xai=r8; dry-* để diễn tập)
+                               --tag: tag release phải dạng r<N>[.<k>] với N = round của STAGE (smoke=r1, sweep=r2, p0a=r3, explore=r4, sweep2=r5, sweep3=r6, p0b=r7, xai=r8, multiseed=r9; dry-* để diễn tập)
   set-stage STAGE              sửa kaggle-run.yml (sessions và STAGE=) cho đúng stage; KHÔNG tự đoán stage kế tiếp
   summary                      bảng stage / session / GPU-giờ
   session-jobs --stage S --session N   TSV cho run_kaggle_food101.sh
@@ -31,8 +31,9 @@ LR_PATH = ROOT / "configs" / "selected_lr.json"
 
 SEEDS = [42, 123, 2024]
 SWEEP_SEED = 42
-STAGE_ORDER = ["smoke", "sweep", "p0a", "explore", "sweep2", "sweep3", "p0b", "xai"]
+STAGE_ORDER = ["smoke", "sweep", "p0a", "explore", "sweep2", "sweep3", "p0b", "xai", "multiseed"]
 # Round: smoke=r1 sweep=r2 p0a=r3 explore=r4 sweep2=r5 sweep3=r6 p0b=r7. sweep2/sweep3 = sweep mở rộng của r2 (DEVIATIONS D2/D4);
+# multiseed = r9: thêm seed 123 và 2024 cho các cấu hình thăm dò vốn chỉ có seed 42 (DEVIATIONS D9).
 # xai = r8: huấn luyện lại seed 42 (ViT-B/L, ConvNeXt-B) + checkpoint fp16 + XAI (DEVIATIONS D8).
 # p0 tách thành p0a (LR đã chốt: ViT-B/L) và p0b (chờ sweep3). DEVIATIONS D5.
 # Số round cố định theo stage (quy ước nhóm: tag release r<N>, zip <project>_r<N>_s<M>.zip)
@@ -71,9 +72,10 @@ STAGE_DESC = {
     "explore": "Thăm dò (1 seed, không kiểm định): DINOv2/CLIP FT+LP, DeiT LP, CLIP zero-shot (quickgelu).",
     "sweep3": "Sweep mở rộng lần cuối (D4): 1e-3 cho ViT-Ti/S, ConvNeXt-B, DeiT-B; 3e-3 cho ResNet-50; proxy giống sweep.",
     "xai": "RQ3: huấn luyện lại Full FT seed 42 (ViT-B, ViT-L, ConvNeXt-B) với LR đã chốt, lưu checkpoint fp16, chạy XAI (rollout, Grad-CAM, IG; deletion/insertion; sanity) trên mẫu test cố định.",
+    "multiseed": "Thêm seed 123 và 2024 cho các cấu hình fine-tuning chỉ có seed 42: DINOv2-B, CLIP-B, DeiT-B (đồ án chỉ báo cáo fine-tuning).",
     "sweep2": "Sweep mở rộng của round 2 (PREREG: LR tốt nhất ở rìa lưới): 3e-4 cho 7 model, thêm 1e-3 cho ResNet-50; proxy giống sweep (20% train, 2 epoch, seed 42).",
 }
-STAGE_DEPENDS = {"smoke": None, "sweep": "smoke", "p0a": "sweep2", "explore": "sweep2", "sweep2": "sweep", "sweep3": "sweep2", "p0b": "sweep3", "xai": "sweep3"}
+STAGE_DEPENDS = {"smoke": None, "sweep": "smoke", "p0a": "sweep2", "explore": "sweep2", "sweep2": "sweep", "sweep3": "sweep2", "p0b": "sweep3", "xai": "sweep3", "multiseed": "sweep3"}
 
 PROTOCOL = {  # đưa vào config_hash: đổi giao thức => đổi băm
     "epochs": 5, "batch_effective": 128, "optimizer": "AdamW", "weight_decay": 0.05,
@@ -158,6 +160,10 @@ def stage_jobs(stage: str) -> list[dict]:
             jobs.append(_job(m, "lp", 42))
         jobs.append(_job("deit_base", "lp", 42))
         jobs.append(_job("clip_base", "zeroshot", 42))
+    elif stage == "multiseed":
+        for s_ in SEEDS[1:]:
+            for m in ("dinov2_base", "clip_base", "deit_base"):
+                jobs.append(_job(m, "ft", s_, lr="selected"))
     elif stage == "xai":
         for m in ("vit_base", "convnext_base", "vit_large"):
             jobs.append(_job(m, "ft", 42, lr="selected", xai=True))
