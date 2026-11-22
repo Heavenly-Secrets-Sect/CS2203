@@ -26,12 +26,16 @@ throughput_train_img_s:
   deit_base: 126
   dinov2_base: 86
   clip_base: 107
+  # D10: HAI DONG DUOI CHUA DO (uoc luong). swin_base ~ giua convnext_base (78) va vit_base (102); mobilenetv3 ~2x resnet50 (co the nghen dataloader).
+  swin_base: 95
+  mobilenetv3: 400
 
 eval_to_train_ratio: 2.7   # ước từ thời gian đánh giá dev+test của smoke r1 (ViT-B và ViT-L đều ~2.7x); gồm giải mã ảnh
 job_overhead_min: 3.0      # nạp model + dựng DataLoader mỗi job (chưa đo)
 lp_head_min: 2.0           # huấn luyện đầu tuyến tính trên đặc trưng đã trích (chưa đo)
 smoke_steps: 20            # --max-steps của job smoke (thật: dữ liệu và model thật, KHÔNG phải cờ --smoke CPU của run_job)
 smoke_train_frac: 0.05
+bench_min: 3.0            # D10: moi job bench (do latency/throughput GPU, khong du lieu), CHUA DO
 smoke_extra_min: 2.0       # tải trọng số model lần đầu (chưa đo)
 session_overhead_min: 25   # pip + tải HF ~5 GB + dựng cache shard 101k ảnh, một lần mỗi session (chưa đo, đoán)
 

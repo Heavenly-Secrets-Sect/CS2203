@@ -152,5 +152,75 @@ class PackXaiTest(unittest.TestCase):
         self.assertEqual(st["n_sessions"], 2)
 
 
+class NewModelsStageTest(unittest.TestCase):   # D10: sweepnew (r10) và p1new (r11)
+    @classmethod
+    def setUpClass(cls):
+        cls.p = json.loads(plan.PLAN_PATH.read_text(encoding="utf-8"))
+
+    def test_rounds_and_depends(self):
+        self.assertEqual(plan.STAGE_ORDER[-2:], ["sweepnew", "p1new"])
+        self.assertEqual((self.p["stages"]["sweepnew"]["round"], self.p["stages"]["p1new"]["round"]), (10, 11))
+        self.assertEqual(self.p["stages"]["p1new"]["depends_on"], "sweepnew")
+
+    def test_sweepnew_jobs(self):
+        jobs = self.p["stages"]["sweepnew"]["jobs"]
+        self.assertEqual(len(jobs), 12 + 11)
+        sw = [j for j in jobs if j["regime"] == "sweep"]
+        for m in plan.NEW_MODELS:
+            self.assertEqual(sorted(j["lr"] for j in sw if j["model"] == m), [1e-5, 3e-5, 1e-4, 3e-4, 1e-3, 3e-3])
+            self.assertEqual(plan.expected_lrs(m), [1e-5, 3e-5, 1e-4, 3e-4, 1e-3, 3e-3])
+        self.assertTrue(all(j["epochs"] == 2 and j["train_frac"] == 0.2 and j["seed"] == 42 for j in sw))
+        bench = [j for j in jobs if j["regime"] == "bench"]
+        self.assertEqual(sorted(j["model"] for j in bench), sorted(plan.ALL_MODELS))
+        self.assertEqual(len(plan.ALL_MODELS), 11)
+        self.assertTrue(all(j["lr"] is None and j["seed"] == 42 and j["est_min"] == 3.0 for j in bench))
+        self.assertEqual(bench[0]["id"], f"{bench[0]['model']}__bench__s42")
+        self.assertEqual(bench[0]["out_rel"], f"{bench[0]['model']}_bench/seed_42")
+        self.assertFalse(self.p["stages"]["sweepnew"]["requires_selected_lr"])
+
+    def test_p1new_jobs(self):
+        st = self.p["stages"]["p1new"]
+        self.assertEqual(sorted((j["model"], j["seed"]) for j in st["jobs"]),
+                         sorted((m, s) for m in plan.NEW_MODELS for s in (42, 123, 2024)))
+        self.assertTrue(all(j["regime"] == "ft" and j["lr"] == "selected" for j in st["jobs"]))
+        self.assertTrue(st["requires_selected_lr"])
+
+    def test_old_jobs_unchanged(self):
+        # config_hash và job của 9 stage cũ không đổi: băm cố định của vài job đã chạy (r9) và toàn bộ job cũ khớp lúc sinh lại
+        old = [s for s in plan.STAGE_ORDER if s not in ("sweepnew", "p1new")]
+        self.assertEqual(sum(self.p["stages"][s]["n_jobs"] for s in old), 12 + 27 + 16 + 6 + 8 + 5 + 13 + 3 + 6)
+        for s in old:
+            for j in self.p["stages"][s]["jobs"]:
+                self.assertNotIn(j["model"], plan.NEW_MODELS)
+                self.assertNotEqual(j["regime"], "bench")
+                self.assertEqual(j["config_hash"], plan.config_hash(j))
+        self.assertEqual({j["config_hash"] for j in self.p["stages"]["multiseed"]["jobs"]} & 
+                         {j["config_hash"] for j in self.p["stages"]["p1new"]["jobs"]}, set())
+
+    def test_bench_not_vit_large_group(self):
+        self.assertEqual(self.p["stages"]["sweepnew"]["n_sessions"], 1)
+
+    def test_audit_and_pack_bench(self):
+        import pack_runs
+        from pathlib import Path as P
+        self.assertTrue(pack_runs.wanted(P("outputs/vit_tiny_bench/seed_42/bench.json")))
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            jobs = [j for j in self.p["stages"]["sweepnew"]["jobs"] if j["regime"] == "bench"]
+            for j in jobs:
+                d = tmp / "outputs" / j["out_rel"]
+                d.mkdir(parents=True)
+                (d / "bench.json").write_text(json.dumps({"params": 1, "gmacs": 1.0, "device": "cuda", "latency_b1_fp32": {},
+                                                           "latency_b1_fp16_autocast": {}}))
+                (d / "run_config.yaml").write_text("a: 1\n")
+            pl = {"stages": {"b": {"jobs": jobs}}}
+            r = audit_runs.audit(pl, [tmp], ["b"], NT, ND, NC)
+            self.assertTrue(r["ok"], r["problems"])
+            (tmp / "outputs" / jobs[0]["out_rel"] / "run_config.yaml").unlink()
+            self.assertFalse(audit_runs.audit(pl, [tmp], ["b"], NT, ND, NC)["ok"])
+        finally:
+            shutil.rmtree(tmp)
+
+
 if __name__ == "__main__":
     unittest.main()

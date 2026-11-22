@@ -105,3 +105,25 @@ clip_base:
     arch: ViT-B-16-quickgelu   # openai dùng QuickGELU; arch ViT-B-16 thường gây cảnh báo mismatch (smoke r1)
     pretrained: openai
   notes: "CLIP ViT-B/16 openai. FT/LP dung image tower timm; zeroshot dung open_clip (import lazy)"
+swin_base:
+  timm_id: swin_base_patch4_window7_224.ms_in22k_ft_in1k
+  hf_id: timm/swin_base_patch4_window7_224.ms_in22k_ft_in1k
+  revision_checked: "chua tra cuu"
+  mean: [0.485, 0.456, 0.406]
+  std: [0.229, 0.224, 0.225]
+  interpolation: bicubic
+  img_size: 224
+  micro_batch: 64
+  lr: null
+  notes: "Swin-B/4 window7 in22k->in1k (Transformer cua so truot, D10); micro_batch chua do tren T4"
+mobilenetv3:
+  timm_id: mobilenetv3_large_100.ra_in1k
+  hf_id: timm/mobilenetv3_large_100.ra_in1k
+  revision_checked: "chua tra cuu"
+  mean: [0.485, 0.456, 0.406]
+  std: [0.229, 0.224, 0.225]
+  interpolation: bicubic
+  img_size: 224
+  micro_batch: 128
+  lr: null
+  notes: "MobileNetV3-Large 1.0 ra in1k (CNN nhe cho di dong, D10); micro_batch chua do tren T4"

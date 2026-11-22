@@ -36,6 +36,7 @@ REQ = {  # regime -> file bắt buộc
     "lpft": ["metrics.json", "history.json", "run_config.yaml", "test_predictions.jsonl", "test_logits.npy", "dev_logits.npy"],
     "zeroshot": ["metrics.json", "run_config.yaml", "test_predictions.jsonl", "test_logits.npy"],
     "sweep": ["metrics.json", "history.json"],
+    "bench": ["bench.json", "run_config.yaml"],   # D10: không có logits/predictions
 }
 
 
@@ -104,6 +105,22 @@ def audit_job(job: dict, d: Path, n_test: int, n_dev: int, n_cls: int, tol: floa
     for fn in REQ[reg]:
         if not (d / fn).is_file():
             P(f"thiếu file {fn}")
+    if reg == "bench":   # chỉ kiểm bench.json: hữu hạn, params > 0, đủ khoá
+        if (d / "bench.json").is_file():
+            try:
+                b = json.loads((d / "bench.json").read_text(encoding="utf-8"))
+                if _list_nan(b):
+                    P("bench.json có NaN/Inf")
+                for k in ("params", "gmacs", "latency_b1_fp32", "device"):
+                    if k not in b:
+                        P(f"bench.json thiếu khoá {k}")
+                if b.get("device") == "cuda" and "latency_b1_fp16_autocast" not in b:
+                    P("bench.json (cuda) thiếu latency fp16")
+                if b.get("device") != "cuda":
+                    W("bench chạy trên CPU, không phải GPU T4")
+            except json.JSONDecodeError as e:
+                P(f"bench.json hỏng: {e}")
+        return info
     metrics = None
     if (d / "metrics.json").is_file():
         try:
@@ -193,7 +210,7 @@ def audit(plan: dict, roots: list[Path], stages: list[str], n_test=25250, n_dev=
     all_dirs: dict[str, Path] = {}  # out_rel -> thư mục
     for r in roots:
         o = find_outputs(r)
-        for m in o.rglob("metrics.json"):
+        for m in sorted(list(o.rglob("metrics.json")) + list(o.rglob("bench.json"))):
             rel = m.parent.relative_to(o).as_posix()
             if rel in all_dirs:
                 warns.append(f"{rel}: có ở nhiều nguồn, dùng nguồn đầu")

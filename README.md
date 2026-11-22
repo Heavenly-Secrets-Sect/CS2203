@@ -38,6 +38,8 @@ Các stage (mỗi release chạy **đúng một**): `smoke` -> `sweep` -> `sweep
 | `r7` | p0b (ViT-Ti/S, ConvNeXt-B, ResNet-50 FT; DeiT-B FT) | 1 | `food101_r7_s1.zip` |
 | `r8` | xai (ViT-B, ConvNeXt-B, ViT-L FT seed 42 + checkpoint fp16 + XAI) | 2 (s2 = ViT-L) | `food101_r8_s1.zip`, `food101_r8_s2.zip` |
 | `r9` | multiseed (seed 123 và 2024 cho DINOv2-B, CLIP-B, DeiT-B fine-tuning) | 1 | `food101_r9_s1.zip` |
+| `r10` | sweepnew (Swin-B, MobileNetV3-L: LR sweep lưới 6 bậc 1e-5..3e-3) + bench (đo latency/throughput GPU T4 cho 11 model, regime `bench`, không dữ liệu) | 1 | `food101_r10_s1.zip` |
+| `r11` | p1new (Swin-B, MobileNetV3-L fine-tuning x3 seed; cần `pick_lr.py --models swin_base,mobilenetv3 food101_r10_s1.zip` rồi commit `selected_lr.json`) | 1 | `food101_r11_s1.zip` |
 
 Gửi lại phần lỗi của round N: `r<N>.1`, `r<N>.2`... Gọi tắt trong báo cáo: "round 3, session 2"; số round lấy từ `python3 scripts/plan.py summary`.
 

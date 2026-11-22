@@ -27,7 +27,9 @@
   "sweep3",
   "p0b",
   "xai",
-  "multiseed"
+  "multiseed",
+  "sweepnew",
+  "p1new"
  ],
  "estimates": {
   "throughput_train_img_s": {
@@ -39,7 +41,9 @@
    "resnet50": 194,
    "deit_base": 126,
    "dinov2_base": 86,
-   "clip_base": 107
+   "clip_base": 107,
+   "swin_base": 95,
+   "mobilenetv3": 400
   },
   "eval_to_train_ratio": 2.7,
   "job_overhead_min": 3.0,
@@ -1805,7 +1809,504 @@
      "config_hash": "fa9eca42a7ae"
     }
    ]
+  },
+  "sweepnew": {
+   "round": 10,
+   "description": "D10: LR sweep proxy (20% train, 2 epoch, seed 42) lưới rộng 6 bậc cho Swin-B và MobileNetV3-L + job bench đo latency/throughput GPU cho 11 model (không dữ liệu, không huấn luyện).",
+   "depends_on": "smoke",
+   "requires_selected_lr": false,
+   "n_jobs": 23,
+   "n_sessions": 1,
+   "est_gpu_hours": 1.87,
+   "sessions": [
+    {
+     "session": 1,
+     "group": "main",
+     "lanes": [
+      [
+       "vit_tiny__bench__s42",
+       "vit_large__bench__s42",
+       "deit_base__bench__s42",
+       "clip_base__bench__s42",
+       "swin_base__bench__s42",
+       "mobilenetv3__bench__s42",
+       "swin_base__sweep__s42__lr1e-5",
+       "mobilenetv3__sweep__s42__lr1e-5",
+       "swin_base__sweep__s42__lr3e-4",
+       "mobilenetv3__sweep__s42__lr3e-4",
+       "swin_base__sweep__s42__lr1e-3",
+       "mobilenetv3__sweep__s42__lr1e-3"
+      ],
+      [
+       "vit_small__bench__s42",
+       "vit_base__bench__s42",
+       "convnext_base__bench__s42",
+       "resnet50__bench__s42",
+       "dinov2_base__bench__s42",
+       "swin_base__sweep__s42__lr3e-5",
+       "mobilenetv3__sweep__s42__lr3e-5",
+       "swin_base__sweep__s42__lr1e-4",
+       "mobilenetv3__sweep__s42__lr1e-4",
+       "swin_base__sweep__s42__lr3e-3",
+       "mobilenetv3__sweep__s42__lr3e-3"
+      ]
+     ],
+     "est_lane_min": [
+      57.6,
+      54.6
+     ],
+     "est_lane_min_safe": [
+      66.0,
+      62.6
+     ]
+    }
+   ],
+   "jobs": [
+    {
+     "id": "vit_tiny__bench__s42",
+     "model": "vit_tiny",
+     "regime": "bench",
+     "seed": 42,
+     "lr": null,
+     "epochs": null,
+     "train_frac": null,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "vit_tiny_bench/seed_42",
+     "est_min": 3.0,
+     "config_hash": "5b9bfdc5f00b"
+    },
+    {
+     "id": "vit_small__bench__s42",
+     "model": "vit_small",
+     "regime": "bench",
+     "seed": 42,
+     "lr": null,
+     "epochs": null,
+     "train_frac": null,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "vit_small_bench/seed_42",
+     "est_min": 3.0,
+     "config_hash": "b07a6df2817a"
+    },
+    {
+     "id": "vit_base__bench__s42",
+     "model": "vit_base",
+     "regime": "bench",
+     "seed": 42,
+     "lr": null,
+     "epochs": null,
+     "train_frac": null,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "vit_base_bench/seed_42",
+     "est_min": 3.0,
+     "config_hash": "6ccfb61b1f4b"
+    },
+    {
+     "id": "vit_large__bench__s42",
+     "model": "vit_large",
+     "regime": "bench",
+     "seed": 42,
+     "lr": null,
+     "epochs": null,
+     "train_frac": null,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "vit_large_bench/seed_42",
+     "est_min": 3.0,
+     "config_hash": "41bc601c5316"
+    },
+    {
+     "id": "convnext_base__bench__s42",
+     "model": "convnext_base",
+     "regime": "bench",
+     "seed": 42,
+     "lr": null,
+     "epochs": null,
+     "train_frac": null,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "convnext_base_bench/seed_42",
+     "est_min": 3.0,
+     "config_hash": "5827427e3f3e"
+    },
+    {
+     "id": "resnet50__bench__s42",
+     "model": "resnet50",
+     "regime": "bench",
+     "seed": 42,
+     "lr": null,
+     "epochs": null,
+     "train_frac": null,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "resnet50_bench/seed_42",
+     "est_min": 3.0,
+     "config_hash": "a83d588c3537"
+    },
+    {
+     "id": "deit_base__bench__s42",
+     "model": "deit_base",
+     "regime": "bench",
+     "seed": 42,
+     "lr": null,
+     "epochs": null,
+     "train_frac": null,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "deit_base_bench/seed_42",
+     "est_min": 3.0,
+     "config_hash": "0092223950bb"
+    },
+    {
+     "id": "dinov2_base__bench__s42",
+     "model": "dinov2_base",
+     "regime": "bench",
+     "seed": 42,
+     "lr": null,
+     "epochs": null,
+     "train_frac": null,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "dinov2_base_bench/seed_42",
+     "est_min": 3.0,
+     "config_hash": "2d3aad1ac449"
+    },
+    {
+     "id": "clip_base__bench__s42",
+     "model": "clip_base",
+     "regime": "bench",
+     "seed": 42,
+     "lr": null,
+     "epochs": null,
+     "train_frac": null,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "clip_base_bench/seed_42",
+     "est_min": 3.0,
+     "config_hash": "dd4e0f2f0762"
+    },
+    {
+     "id": "swin_base__bench__s42",
+     "model": "swin_base",
+     "regime": "bench",
+     "seed": 42,
+     "lr": null,
+     "epochs": null,
+     "train_frac": null,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "swin_base_bench/seed_42",
+     "est_min": 3.0,
+     "config_hash": "9d0fcd937deb"
+    },
+    {
+     "id": "mobilenetv3__bench__s42",
+     "model": "mobilenetv3",
+     "regime": "bench",
+     "seed": 42,
+     "lr": null,
+     "epochs": null,
+     "train_frac": null,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "mobilenetv3_bench/seed_42",
+     "est_min": 3.0,
+     "config_hash": "59cbcecff750"
+    },
+    {
+     "id": "swin_base__sweep__s42__lr1e-5",
+     "model": "swin_base",
+     "regime": "sweep",
+     "seed": 42,
+     "lr": 1e-05,
+     "epochs": 2,
+     "train_frac": 0.2,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "swin_base_sweep-lr1e-5/seed_42",
+     "est_min": 8.8,
+     "config_hash": "3e1d2ee3f502"
+    },
+    {
+     "id": "mobilenetv3__sweep__s42__lr1e-5",
+     "model": "mobilenetv3",
+     "regime": "sweep",
+     "seed": 42,
+     "lr": 1e-05,
+     "epochs": 2,
+     "train_frac": 0.2,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "mobilenetv3_sweep-lr1e-5/seed_42",
+     "est_min": 4.4,
+     "config_hash": "2ba7e6dc7572"
+    },
+    {
+     "id": "swin_base__sweep__s42__lr3e-5",
+     "model": "swin_base",
+     "regime": "sweep",
+     "seed": 42,
+     "lr": 3e-05,
+     "epochs": 2,
+     "train_frac": 0.2,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "swin_base_sweep-lr3e-5/seed_42",
+     "est_min": 8.8,
+     "config_hash": "bd0591c89aee"
+    },
+    {
+     "id": "mobilenetv3__sweep__s42__lr3e-5",
+     "model": "mobilenetv3",
+     "regime": "sweep",
+     "seed": 42,
+     "lr": 3e-05,
+     "epochs": 2,
+     "train_frac": 0.2,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "mobilenetv3_sweep-lr3e-5/seed_42",
+     "est_min": 4.4,
+     "config_hash": "a2e07f92b05e"
+    },
+    {
+     "id": "swin_base__sweep__s42__lr1e-4",
+     "model": "swin_base",
+     "regime": "sweep",
+     "seed": 42,
+     "lr": 0.0001,
+     "epochs": 2,
+     "train_frac": 0.2,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "swin_base_sweep-lr1e-4/seed_42",
+     "est_min": 8.8,
+     "config_hash": "0ab60b031262"
+    },
+    {
+     "id": "mobilenetv3__sweep__s42__lr1e-4",
+     "model": "mobilenetv3",
+     "regime": "sweep",
+     "seed": 42,
+     "lr": 0.0001,
+     "epochs": 2,
+     "train_frac": 0.2,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "mobilenetv3_sweep-lr1e-4/seed_42",
+     "est_min": 4.4,
+     "config_hash": "68ffd08154bd"
+    },
+    {
+     "id": "swin_base__sweep__s42__lr3e-4",
+     "model": "swin_base",
+     "regime": "sweep",
+     "seed": 42,
+     "lr": 0.0003,
+     "epochs": 2,
+     "train_frac": 0.2,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "swin_base_sweep-lr3e-4/seed_42",
+     "est_min": 8.8,
+     "config_hash": "c44924ffa9c2"
+    },
+    {
+     "id": "mobilenetv3__sweep__s42__lr3e-4",
+     "model": "mobilenetv3",
+     "regime": "sweep",
+     "seed": 42,
+     "lr": 0.0003,
+     "epochs": 2,
+     "train_frac": 0.2,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "mobilenetv3_sweep-lr3e-4/seed_42",
+     "est_min": 4.4,
+     "config_hash": "b31b1669bd4a"
+    },
+    {
+     "id": "swin_base__sweep__s42__lr1e-3",
+     "model": "swin_base",
+     "regime": "sweep",
+     "seed": 42,
+     "lr": 0.001,
+     "epochs": 2,
+     "train_frac": 0.2,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "swin_base_sweep-lr1e-3/seed_42",
+     "est_min": 8.8,
+     "config_hash": "9b1ed969e687"
+    },
+    {
+     "id": "mobilenetv3__sweep__s42__lr1e-3",
+     "model": "mobilenetv3",
+     "regime": "sweep",
+     "seed": 42,
+     "lr": 0.001,
+     "epochs": 2,
+     "train_frac": 0.2,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "mobilenetv3_sweep-lr1e-3/seed_42",
+     "est_min": 4.4,
+     "config_hash": "d056625f3593"
+    },
+    {
+     "id": "swin_base__sweep__s42__lr3e-3",
+     "model": "swin_base",
+     "regime": "sweep",
+     "seed": 42,
+     "lr": 0.003,
+     "epochs": 2,
+     "train_frac": 0.2,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "swin_base_sweep-lr3e-3/seed_42",
+     "est_min": 8.8,
+     "config_hash": "34dd0d5e9985"
+    },
+    {
+     "id": "mobilenetv3__sweep__s42__lr3e-3",
+     "model": "mobilenetv3",
+     "regime": "sweep",
+     "seed": 42,
+     "lr": 0.003,
+     "epochs": 2,
+     "train_frac": 0.2,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "mobilenetv3_sweep-lr3e-3/seed_42",
+     "est_min": 4.4,
+     "config_hash": "8ff48e9307dd"
+    }
+   ]
+  },
+  "p1new": {
+   "round": 11,
+   "description": "D10: Full FT seed 42/123/2024 cho Swin-B và MobileNetV3-L với LR chọn từ sweepnew.",
+   "depends_on": "sweepnew",
+   "requires_selected_lr": true,
+   "n_jobs": 6,
+   "n_sessions": 1,
+   "est_gpu_hours": 4.25,
+   "sessions": [
+    {
+     "session": 1,
+     "group": "main",
+     "lanes": [
+      [
+       "swin_base__ft__s42",
+       "swin_base__ft__s123"
+      ],
+      [
+       "mobilenetv3__ft__s42",
+       "mobilenetv3__ft__s123",
+       "swin_base__ft__s2024",
+       "mobilenetv3__ft__s2024"
+      ]
+     ],
+     "est_lane_min": [
+      133.8,
+      121.5
+     ],
+     "est_lane_min_safe": [
+      153.8,
+      139.6
+     ]
+    }
+   ],
+   "jobs": [
+    {
+     "id": "swin_base__ft__s42",
+     "model": "swin_base",
+     "regime": "ft",
+     "seed": 42,
+     "lr": "selected",
+     "epochs": null,
+     "train_frac": null,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "swin_base_ft/seed_42",
+     "est_min": 66.9,
+     "config_hash": "89eb1ddc74c2"
+    },
+    {
+     "id": "mobilenetv3__ft__s42",
+     "model": "mobilenetv3",
+     "regime": "ft",
+     "seed": 42,
+     "lr": "selected",
+     "epochs": null,
+     "train_frac": null,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "mobilenetv3_ft/seed_42",
+     "est_min": 18.2,
+     "config_hash": "2953f858c21a"
+    },
+    {
+     "id": "swin_base__ft__s123",
+     "model": "swin_base",
+     "regime": "ft",
+     "seed": 123,
+     "lr": "selected",
+     "epochs": null,
+     "train_frac": null,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "swin_base_ft/seed_123",
+     "est_min": 66.9,
+     "config_hash": "c1bd4b9996bc"
+    },
+    {
+     "id": "mobilenetv3__ft__s123",
+     "model": "mobilenetv3",
+     "regime": "ft",
+     "seed": 123,
+     "lr": "selected",
+     "epochs": null,
+     "train_frac": null,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "mobilenetv3_ft/seed_123",
+     "est_min": 18.2,
+     "config_hash": "96440519f697"
+    },
+    {
+     "id": "swin_base__ft__s2024",
+     "model": "swin_base",
+     "regime": "ft",
+     "seed": 2024,
+     "lr": "selected",
+     "epochs": null,
+     "train_frac": null,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "swin_base_ft/seed_2024",
+     "est_min": 66.9,
+     "config_hash": "b7b9527565e7"
+    },
+    {
+     "id": "mobilenetv3__ft__s2024",
+     "model": "mobilenetv3",
+     "regime": "ft",
+     "seed": 2024,
+     "lr": "selected",
+     "epochs": null,
+     "train_frac": null,
+     "max_steps": null,
+     "smoke": false,
+     "out_rel": "mobilenetv3_ft/seed_2024",
+     "est_min": 18.2,
+     "config_hash": "4365b5250647"
+    }
+   ]
   }
  },
- "plan_hash": "fa90ba1c8275f80e"
+ "plan_hash": "54a5f41662dbe60d"
 }

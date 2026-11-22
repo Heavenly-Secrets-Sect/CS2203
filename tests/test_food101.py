@@ -150,3 +150,14 @@ def test_models_yaml_complete():
     for k, v in m.items():
         assert {"timm_id", "mean", "std", "interpolation", "img_size", "micro_batch", "lr"} <= set(v), k
         assert v["lr"] is None
+
+
+# ---- regime bench (D10)
+def test_bench_smoke_cpu(tmp_path):
+    out = run_smoke(tmp_path / "b", "bench", "vit_tiny", 42)
+    assert (out / "DONE").exists() and (out / "run_config.yaml").exists()
+    b = json.loads((out / "bench.json").read_text())
+    assert b["params"] > 0 and b["gmacs"] > 0 and b["device"] == "cpu"
+    assert b["latency_b1_fp32"]["median_ms"] > 0 and b["latency_b1_fp32"]["p10_ms"] <= b["latency_b1_fp32"]["p90_ms"]
+    assert not (out / "test_logits.npy").exists() and not (out / "metrics.json").exists()
+    assert yaml.safe_load((out / "run_config.yaml").read_text())["status"] == "ok"

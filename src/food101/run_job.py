@@ -1,4 +1,4 @@
-"""python -m food101.run_job --model KEY --regime {ft,lp,lpft,zeroshot,sweep} --seed N --out DIR [...]"""
+"""python -m food101.run_job --model KEY --regime {ft,lp,lpft,zeroshot,sweep,bench} --seed N --out DIR [...]"""
 import argparse
 import copy
 import json
@@ -19,7 +19,7 @@ from . import splits as S
 from .utils import (git_commit, lib_versions, load_configs, seed_everything, splits_dir, write_json,
                     write_yaml)
 
-REGIMES = ("ft", "lp", "lpft", "zeroshot", "sweep")
+REGIMES = ("ft", "lp", "lpft", "zeroshot", "sweep", "bench")
 
 
 def parse_args(argv=None):
@@ -105,6 +105,9 @@ def run(args):
             raise SystemExit(f"model '{args.model}' chua co lr (chay sweep roi dien configs/models.yaml, hoac truyen --lr)")
     if regime in ("sweep",) and args.lr is None and not smoke:
         raise SystemExit("regime sweep can --lr")
+
+    if regime == "bench":   # D10: khong du lieu, khong huan luyen
+        return run_bench(args, mcfg, device, smoke, img_size, out, t_start)
 
     # ---- data
     if smoke:
@@ -232,6 +235,38 @@ def run(args):
                  "cache_meta": {k: meta["splits"][k] for k in meta["splits"]},
                  "test_equals_hf_validation_unverified": True},
         "time": {"start_unix": t_start, "total_s": time.time() - t_start, "fit_and_eval_s": t_train},
+        "peak_memory": _peak_mem(device),
+        "status": "ok",
+    }
+    write_yaml(out / "run_config.yaml", run_cfg)
+    (out / "DONE").write_text("ok\n")
+    return out
+
+
+def run_bench(args, mcfg, device, smoke, img_size, out, t_start):
+    import torch
+    from . import bench as B
+    from .models import build_model, resolved_revision
+    model = build_model(mcfg, 101, img_size, smoke, pretrained=False)
+    res = B.measure(model, device, img_size, smoke, log)
+    res.update({"model": args.model, "timm_id": mcfg["timm_id"] if not smoke else "SMOKE-vit_tiny-depth2",
+                "seed": args.seed, "gpu": _gpu_name(device), "torch": torch.__version__,
+                "cuda": torch.version.cuda, "cudnn": torch.backends.cudnn.version() if device == "cuda" else None,
+                "smoke": smoke,
+                "note": "pretrained=False; anh ngau nhien; GMACs = FLOPs/2 (FlopCounterMode: matmul/conv/attention)"})
+    write_json(out / "bench.json", res)
+    log(f"[bench] {args.model} params={res['params']} gmacs={res['gmacs']:.2f} "
+        f"lat_b1_fp32={res['latency_b1_fp32']['median_ms']:.2f}ms device={device}")
+    run_cfg = {
+        "command": " ".join(getattr(sys, "orig_argv", sys.argv)), "argv": sys.argv[1:], "git_commit": git_commit(),
+        "versions": lib_versions(), "gpu": _gpu_name(device), "device": device, "smoke": smoke,
+        "model": {"key": args.model, "timm_id": mcfg["timm_id"], "hf_id": mcfg["hf_id"],
+                  "revision_checked": mcfg.get("revision_checked"),
+                  "revision_resolved": resolved_revision(mcfg, smoke),
+                  "mean": mcfg["mean"], "std": mcfg["std"], "interpolation": mcfg["interpolation"],
+                  "img_size": img_size, "params": res["params"]},
+        "regime": "bench", "seed": args.seed,
+        "time": {"start_unix": t_start, "total_s": time.time() - t_start},
         "peak_memory": _peak_mem(device),
         "status": "ok",
     }

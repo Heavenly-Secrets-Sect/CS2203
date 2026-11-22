@@ -1,13 +1,13 @@
 import json
 
 
-def build_model(mcfg, num_classes, img_size, smoke=False):
+def build_model(mcfg, num_classes, img_size, smoke=False, pretrained=True):
     import timm
     if smoke:  # model tiny, khong tai trong so
         return timm.create_model("vit_tiny_patch16_224", pretrained=False, num_classes=num_classes,
                                  img_size=img_size, depth=2)
     kw = {"img_size": img_size} if mcfg.get("pass_img_size") else {}
-    return timm.create_model(mcfg["timm_id"], pretrained=True, num_classes=num_classes, **kw)
+    return timm.create_model(mcfg["timm_id"], pretrained=pretrained, num_classes=num_classes, **kw)
 
 
 def resolved_revision(mcfg, smoke):
